@@ -178,6 +178,7 @@ Old setups are upgraded automatically on first unlock. The old files are kept as
 
 
 ### Todos:
+```
 change master
 encrypt whole db
 simple commands(cp,rm,edit)
@@ -201,3 +202,4 @@ upgrade the node to 22.23.5 (lts)
 build binray/run file for all platforms linux/window/macos  (work beside .json files beside the birany/bin file)
 fuzzy search
 generate password on add
+```
