@@ -3,10 +3,51 @@ const colors = require(modulesPath + "/colors");
 const deleteEntry = require("./delete");
 const updateEntry = require("./update");
 
+const COLUMNS = ["id", "name", "location", "username", "login"];
+
+const width = (str) => [...str].length;
+const clean = (val) => String(val ?? "").replace(/\s+/g, " ").trim();
+const truncate = (str, max) => (width(str) <= max ? str : [...str].slice(0, Math.max(max - 1, 0)).join("") + "…");
+const pad = (str, w, right) => (right ? " ".repeat(w - width(str)) + str : str + " ".repeat(w - width(str)));
+
+// shrink the widest columns until the table fits the terminal (id never shrinks)
+function fitWidths(widths, maxTotal) {
+  const total = () => widths.reduce((a, b) => a + b, 0) + widths.length * 3 + 1; // "│ " + " " per cell + last "│"
+  while (total() > maxTotal) {
+    let widest = 1;
+    for (let i = 2; i < widths.length; i++) if (widths[i] > widths[widest]) widest = i;
+    if (widths[widest] <= 4) break; // can't shrink any further, let the terminal wrap
+    widths[widest]--;
+  }
+  return widths;
+}
+
 function showTable(arr) {
-  if (!arr.length) return console.log(colors.cyan("0 Entries"));
-  console.table(arr, ["id", "name", "location", "username", "login"]);
-  console.log(arr.length >= 2 ? arr.length + " rows" : arr.length + " row");
+  if (!arr.length) return console.log(colors.cyan("0 entries"));
+
+  const rows = arr.map((obj) => COLUMNS.map((col) => clean(obj[col])));
+  const widths = COLUMNS.map((col, i) => Math.max(col.length, ...rows.map((r) => width(r[i]) || 1)));
+  fitWidths(widths, process.stdout.columns || Infinity);
+
+  const line = (l, m, r) => colors.gray(l + widths.map((w) => "─".repeat(w + 2)).join(m) + r);
+  const bar = colors.gray("│");
+  const row = (cells) => bar + cells.map((c) => " " + c + " ").join(bar) + bar;
+
+  const out = [line("╭", "┬", "╮"), row(COLUMNS.map((col, i) => colors.bold.cyan(pad(col.toUpperCase(), widths[i])))), line("├", "┼", "┤")];
+  rows.forEach((r) => {
+    out.push(
+      row(
+        r.map((val, i) => {
+          if (!val) return colors.gray(pad("-", widths[i]));
+          const text = pad(truncate(val, widths[i]), widths[i], i === 0);
+          return i === 0 ? colors.yellow(text) : text;
+        })
+      )
+    );
+  });
+  out.push(line("╰", "┴", "╯"));
+  out.push(colors.gray(" " + arr.length + (arr.length === 1 ? " entry" : " entries")));
+  console.log(out.join("\n"));
 }
 
 // id: exact match, other fields: case-insensitive "contains"
