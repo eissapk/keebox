@@ -175,3 +175,29 @@ Old setups are upgraded automatically on first unlock. The old files are kept as
 | Vault key → account password | `olum.js` → `decrypt` (called from `get.js` → `copyEntry`) | `iv`, `tag`, `data` |
 
 > `db.json` / `credentials.json` are created automatically if missing, and every save keeps the previous version as `db.json.bak` / `credentials.json.bak`.
+
+
+### Todos:
+change master
+encrypt whole db
+simple commands(cp,rm,edit)
+propmts for missing fields
+show command
+show created/updated columns
+fallback if copy to clipboard faild just print the password via console.log
+damage check
+async/await
+drop colors and replace it with a 10 line color helper
+tests for crypto
+backup command
+export
+
+create emerygency key so if crednetials.json file is delete then that emerygency key can be used to access accounts and reset everything including the master key
+make sure inputs can be wrapped in quotes automaticlly instead of manual typing in quotes if there is a space
+
+import accounts via csv
+choose where the db lives
+upgrade the node to 22.23.5 (lts)
+build binray/run file for all platforms linux/window/macos  (work beside .json files beside the birany/bin file)
+fuzzy search
+generate password on add
