@@ -1,0 +1,29 @@
+<script>
+  import Card from "../ui/Card/Card";
+  import Icon from "../ui/Icon/Icon";
+  import SectionHeading from "./SectionHeading";
+  import { features } from "../../utils/site.js";
+</script>
+
+<section id="features" class="relative py-16 sm:py-24">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6">
+    <SectionHeading eyebrow="Features" title="Everything you need." subtitle="Nothing in your way." />
+
+    <ul class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <for each="f of features" key="f.title">
+        <li class="flex">
+          <Card class="panel panel-hover group w-full flex-row items-start gap-4 rounded-2xl bg-transparent p-5 ring-0 sm:p-6">
+            <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-amber/10 text-amber ring-1 ring-amber/20 transition-colors group-hover:bg-amber/15">
+              <Icon icon="{f.icon}" class="size-5" />
+            </span>
+            <div class="min-w-0">
+              <h3 class="font-display text-[17px] font-semibold tracking-tight">{f.title}</h3>
+              <p class="mt-1.5 text-sm leading-relaxed text-muted-foreground">{f.text}</p>
+              <code class="mt-3 inline-block rounded-md bg-white/[0.04] px-2 py-1 font-mono text-xs text-foreground/70 ring-1 ring-border">keybox {f.cmd}</code>
+            </div>
+          </Card>
+        </li>
+      </for>
+    </ul>
+  </div>
+</section>

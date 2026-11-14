@@ -1,0 +1,82 @@
+<script>
+  import { onMount } from "olum";
+
+  // A scripted session that mirrors the real CLI output.
+  const CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*";
+  const mkPass = (n) => Array.from(crypto.getRandomValues(new Uint32Array(n)), (v) => CHARS[v % CHARS.length]).join("");
+
+  const scene = () => [
+    { cmd: "keybox make --length 24" },
+    { out: "Copied to clipboard (clears in 20s):", tone: "ok" },
+    { out: mkPass(24), tone: "amber" },
+    { gap: true },
+    { cmd: "keybox get --name github --copy" },
+    { out: "? MASTER PASSWORD: ••••••••••••", tone: "muted" },
+    { out: "Copied password of entry #12 to clipboard, clears in 20s", tone: "ok", tick: true },
+  ];
+
+  const state = { lines: [], typing: null };
+  const PROMPT = "$";
+
+  const tone = (line) =>
+    line.tone === "ok" ? "text-ok" : line.tone === "amber" ? "text-amber" : line.tone === "muted" ? "text-muted-foreground" : "text-foreground";
+
+  onMount(() => {
+    let alive = true;
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reduce) {
+      state.lines = scene();
+      return () => (alive = false);
+    }
+
+    (async () => {
+      while (alive) {
+        state.lines = [];
+        for (const step of scene()) {
+          if (!alive) return;
+          if (step.cmd) {
+            state.typing = "";
+            await wait(450);
+            for (const ch of step.cmd) {
+              if (!alive) return;
+              state.typing += ch;
+              await wait(38 + Math.random() * 55);
+            }
+            await wait(320);
+            state.typing = null;
+            state.lines = [...state.lines, step];
+          } else {
+            await wait(step.gap ? 200 : 380);
+            state.lines = [...state.lines, step];
+          }
+        }
+        await wait(5200);
+      }
+    })();
+
+    return () => (alive = false);
+  });
+</script>
+
+<div class="panel relative overflow-hidden !rounded-2xl text-left shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9),0_0_0_1px_rgba(244,166,58,0.12)]">
+  <div class="flex items-center gap-2 border-b border-border bg-white/[0.02] px-4 py-3">
+    <span class="size-3 rounded-full bg-[#ff5f57]"></span>
+    <span class="size-3 rounded-full bg-[#febc2e]"></span>
+    <span class="size-3 rounded-full bg-[#28c840]"></span>
+    <span class="flex-1 pr-12 text-center font-mono text-xs text-muted-foreground">keybox — zsh</span>
+  </div>
+  <div class="h-[248px] overflow-hidden px-5 py-5 font-mono text-[13px] leading-6 sm:text-sm" aria-label="Example KeyBox terminal session" role="img">
+    <for each="(line, i) of state.lines" key="i">
+      <if when="line.cmd">
+        <p class="whitespace-pre-wrap break-all"><span class="select-none text-amber">{PROMPT} </span>{line.cmd}</p>
+      </if>
+      <else-if when="line.gap"><p class="h-3"></p></else-if>
+      <else>
+        <p class="whitespace-pre-wrap break-all {tone(line)}"><if when="line.tick"><span class="mr-1.5">✓</span></if>{line.out}</p>
+      </else>
+    </for>
+    <p class="whitespace-pre-wrap break-all"><span class="select-none text-amber">{PROMPT} </span>{state.typing || ""}<span class="ml-px inline-block h-[1.1em] w-[0.55em] translate-y-[3px] bg-amber/90 [animation:kb-blink_1.1s_steps(1)_infinite]"></span></p>
+  </div>
+</div>

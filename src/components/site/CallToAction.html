@@ -1,0 +1,22 @@
+<script>
+  import Anchor from "../ui/Anchor/Anchor";
+  import Icon from "../ui/Icon/Icon";
+  import Logo from "./Logo";
+  import { arrowRight } from "../../utils/icons.js";
+</script>
+
+<section class="mx-auto max-w-6xl px-4 pb-20 sm:px-6 sm:pb-28">
+  <div class="panel grain relative flex flex-col items-start gap-8 overflow-hidden !rounded-3xl p-8 sm:p-10 md:flex-row md:items-center">
+    <div aria-hidden="true" class="absolute -left-20 top-1/2 size-72 -translate-y-1/2 rounded-full bg-amber/15 blur-3xl"></div>
+    <div class="relative grid size-20 shrink-0 place-items-center rounded-full bg-amber/10 ring-1 ring-amber/25">
+      <Logo size="mark" />
+    </div>
+    <div class="relative flex-1">
+      <h2 class="font-display text-[clamp(1.6rem,3.2vw,2.2rem)] leading-tight font-bold tracking-[-0.02em]">Your vault. Your devices. Your keys.</h2>
+      <p class="mt-2 text-muted-foreground">Keep your credentials close. Take your database anywhere.</p>
+    </div>
+    <Anchor href="#install" size="lg" class="relative h-12 rounded-full px-6 text-[15px] font-semibold shadow-[0_10px_40px_-10px_rgba(244,166,58,0.7)]">
+      Get KeyBox <Icon icon="{arrowRight}" class="size-4" />
+    </Anchor>
+  </div>
+</section>

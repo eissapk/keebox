@@ -1,0 +1,74 @@
+<script>
+  import PlatformIcons from "./PlatformIcons";
+  import CopyButton from "./CopyButton";
+
+  const BRACES = "{ }";
+  const ALIAS = "alias keybox='node /media/usb/keybox/index.js'";
+</script>
+
+<section id="portability" class="relative overflow-hidden py-16 sm:py-24">
+  <div class="mx-auto grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-2">
+    <div>
+      <span class="eyebrow">Portability</span>
+      <h2 class="mt-4 font-display text-[clamp(2rem,4.4vw,3rem)] leading-[1.05] font-bold tracking-[-0.03em]">Two files. Every machine.</h2>
+      <p class="mt-5 max-w-lg text-lg leading-relaxed text-muted-foreground">
+        Your vault is <code class="font-mono text-foreground">db.json</code> plus <code class="font-mono text-foreground">credentials.json</code>. Keep them on
+        your computer, or copy the whole folder to a USB drive with a Node runtime for each OS and run it wherever you plug in. No account, no sync
+        server, no cloud.
+      </p>
+
+      <div class="panel mt-7 flex items-center gap-2 py-1.5 pr-1.5 pl-4">
+        <code class="min-w-0 flex-1 py-1 font-mono text-[13px] leading-5 break-all text-foreground/85">{ALIAS}</code>
+        <CopyButton text="{ALIAS}" label="Copy alias" />
+      </div>
+
+      <div class="mt-7"><PlatformIcons variant="tiles" /></div>
+    </div>
+
+    <!-- illustration: a drive carrying the two vault files -->
+    <div class="relative mx-auto aspect-[5/4] w-full max-w-[520px]" aria-hidden="true">
+      <div class="absolute inset-x-[4%] top-[42%] h-[46%] rounded-[50%] border border-amber/50 shadow-[0_0_60px_-4px_rgba(244,166,58,0.55),inset_0_0_50px_-10px_rgba(244,166,58,0.35)]"></div>
+      <div class="absolute inset-x-[16%] top-[52%] h-[26%] rounded-[50%] bg-[radial-gradient(closest-side,rgba(244,166,58,0.28),transparent)] blur-md"></div>
+
+      <svg class="absolute top-[14%] left-[4%] w-[62%] [animation:kb-float_7s_ease-in-out_infinite]" viewBox="0 0 320 220" fill="none">
+        <defs>
+          <linearGradient id="kb-usb-body" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#2b2824" />
+            <stop offset="1" stop-color="#0e0d0b" />
+          </linearGradient>
+          <linearGradient id="kb-usb-metal" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#d9d6d0" />
+            <stop offset="1" stop-color="#7d7a74" />
+          </linearGradient>
+          <linearGradient id="kb-usb-lock" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ffc56b" />
+            <stop offset="1" stop-color="#e07f1f" />
+          </linearGradient>
+        </defs>
+        <g transform="rotate(-28 160 110)">
+          <rect x="18" y="86" width="74" height="52" rx="4" fill="url(#kb-usb-metal)" />
+          <rect x="30" y="98" width="14" height="10" rx="1.5" fill="#2a2724" />
+          <rect x="30" y="116" width="14" height="10" rx="1.5" fill="#2a2724" />
+          <rect x="84" y="70" width="210" height="84" rx="22" fill="url(#kb-usb-body)" stroke="#f4a63a" stroke-opacity=".55" />
+          <rect x="92" y="76" width="194" height="20" rx="10" fill="#fff" fill-opacity=".05" />
+          <g transform="translate(176 92)">
+            <path d="M8 18v-6a12 12 0 0 1 24 0v6" stroke="url(#kb-usb-lock)" stroke-width="5" stroke-linecap="round" />
+            <rect x="2" y="17" width="36" height="28" rx="6" fill="url(#kb-usb-lock)" />
+            <circle cx="20" cy="29" r="4" fill="#1d1306" />
+            <rect x="18" y="30" width="4" height="8" rx="2" fill="#1d1306" />
+          </g>
+        </g>
+      </svg>
+
+      <div class="absolute top-[18%] right-[4%] w-[34%] rotate-6 [animation:kb-float_8s_ease-in-out_infinite_-2s]">
+        <div class="panel relative aspect-[4/5] !rounded-xl border-white/15 bg-gradient-to-b from-[#3a3632] to-[#1b1916]">
+          <span class="absolute top-0 right-0 size-6 rounded-bl-lg rounded-tr-xl bg-[#55504a]"></span>
+          <span class="absolute inset-0 grid place-items-center font-mono text-3xl font-semibold text-foreground/80">{BRACES}</span>
+        </div>
+        <span class="absolute -bottom-3 -left-6 -rotate-3 rounded-md border border-white/10 bg-[#0f0e0c] px-2.5 py-1 font-mono text-xs font-medium text-foreground shadow-lg">db.json</span>
+      </div>
+
+      <span class="absolute right-[0%] bottom-[18%] rotate-[-4deg] rounded-md border border-amber/30 bg-[#0f0e0c] px-2.5 py-1 font-mono text-xs text-amber shadow-lg">credentials.json</span>
+    </div>
+  </div>
+</section>

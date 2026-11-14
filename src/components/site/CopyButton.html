@@ -1,0 +1,51 @@
+<script>
+  import { props } from "olum";
+  import Button from "../ui/Button/Button";
+  import Icon from "../ui/Icon/Icon";
+  import Tooltip from "../ui/Tooltip/Tooltip";
+  import TooltipTrigger from "../ui/Tooltip/TooltipTrigger";
+  import TooltipContent from "../ui/Tooltip/TooltipContent";
+  import { copy, check } from "../../utils/icons.js";
+
+  const { text, label = "Copy to clipboard" } = props();
+  const state = { copied: false };
+  let timer;
+
+  // Clipboard API first; fall back to a hidden textarea + execCommand where the
+  // API is missing or refuses (plain-http hosts, unfocused documents).
+  const legacyCopy = () => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;opacity:0;pointer-events:none";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    ta.remove();
+    return ok;
+  };
+
+  const doCopy = async () => {
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(text);
+      ok = true;
+    } catch (e) {
+      ok = legacyCopy();
+    }
+    if (!ok) return;
+    state.copied = true;
+    clearTimeout(timer);
+    timer = setTimeout(() => (state.copied = false), 1600);
+  };
+</script>
+
+<Tooltip>
+  <TooltipTrigger>
+    <Button variant="ghost" size="icon-sm" ariaLabel="{label}" onclick="{doCopy}" class="text-muted-foreground hover:text-amber">
+      <if when="state.copied"><Icon icon="{check}" class="size-4 text-ok" /></if>
+      <else><Icon icon="{copy}" class="size-4" /></else>
+    </Button>
+  </TooltipTrigger>
+  <TooltipContent>{state.copied ? "Copied" : "Copy"}</TooltipContent>
+</Tooltip>

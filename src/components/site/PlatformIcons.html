@@ -1,0 +1,29 @@
+<script>
+  import { props } from "olum";
+  import Icon from "../ui/Icon/Icon";
+  import Tooltip from "../ui/Tooltip/Tooltip";
+  import TooltipTrigger from "../ui/Tooltip/TooltipTrigger";
+  import TooltipContent from "../ui/Tooltip/TooltipContent";
+  import { platforms } from "../../utils/site.js";
+
+  // "plain": bare glyphs (hero, footer). "tiles": glyphs on small dark tiles.
+  const { variant = "plain", size = "md" } = props();
+  const glyph = () => (size === "sm" ? "size-4" : "size-6");
+  const wrap = () =>
+    variant === "tiles"
+      ? "grid size-12 place-items-center rounded-xl border border-border bg-surface-2 text-foreground/80 transition-colors hover:border-amber/40 hover:text-amber"
+      : "grid place-items-center text-foreground/70 transition-colors hover:text-amber";
+</script>
+
+<ul class="flex flex-wrap items-center {variant === 'tiles' ? 'gap-3' : size === 'sm' ? 'gap-4' : 'gap-6'}" aria-label="Supported platforms">
+  <for each="p of platforms" key="p.name">
+    <li>
+      <Tooltip>
+        <TooltipTrigger>
+          <span class="{wrap()}" tabindex="0" aria-label="{p.name}"><Icon icon="{p.icon}" class="{glyph()}" /></span>
+        </TooltipTrigger>
+        <TooltipContent>{p.name}</TooltipContent>
+      </Tooltip>
+    </li>
+  </for>
+</ul>

@@ -1,0 +1,144 @@
+<script>
+  import Tabs from "../ui/Tabs/Tabs";
+  import TabsList from "../ui/Tabs/TabsList";
+  import TabsTrigger from "../ui/Tabs/TabsTrigger";
+  import TabsContent from "../ui/Tabs/TabsContent";
+  import SectionHeading from "./SectionHeading";
+  import CopyButton from "./CopyButton";
+
+  // Each tab: commands (with a comment) and what the terminal prints back.
+  const groups = [
+    {
+      id: "add",
+      label: "Add",
+      cmds: [
+        ["keybox add --name google --username foo@gmail.com --location google.com", ""],
+        ['keybox add --name github --username foo --location github.com --notes "2FA via phone"', "with notes"],
+      ],
+      out: [
+        ["muted", "? MASTER PASSWORD: ••••••••••••"],
+        ["muted", "? Add password:  ••••••••••••••••"],
+        ["ok", "[+] Added entry #12"],
+      ],
+    },
+    {
+      id: "find",
+      label: "Find",
+      cmds: [
+        ["keybox get", "every account, as a table"],
+        ["keybox get --id 2", "exact id"],
+        ["keybox get --name git", "any field, case-insensitive"],
+      ],
+      table: {
+        cols: ["ID", "NAME", "LOCATION", "USERNAME", "LOGIN", "NOTES"],
+        rows: [
+          ["12", "github", "github.com", "foo", "-", "2FA via phone"],
+          ["14", "gitlab", "gitlab.com", "foo", "-", "-"],
+        ],
+      },
+      out: [["dim", " 2 entries"]],
+    },
+    {
+      id: "copy",
+      label: "Copy",
+      cmds: [
+        ["keybox get --name github --copy", "one match → clipboard"],
+        ["keybox get --id 12 --copy", "narrow it down by id"],
+      ],
+      out: [
+        ["muted", "? MASTER PASSWORD: ••••••••••••"],
+        ["ok", "Copied password of entry #12 to clipboard, clears in 20s"],
+        ["dim", ""],
+        ["dim", "# on Android (Termux) the password is printed instead"],
+      ],
+    },
+    {
+      id: "edit",
+      label: "Update & delete",
+      cmds: [
+        ["keybox get --id 12 --update", "Enter keeps a value, '-' clears it"],
+        ["keybox get --id 14 --delete", "asks before it deletes"],
+      ],
+      out: [
+        ["muted", "? Entry #12 github (foo) will be updated, Are you sure? Yes"],
+        ["dim", "Enter = keep current value, '-' = clear it"],
+        ["muted", "? New notes [2FA via phone]: 2FA via app"],
+        ["muted", "? New password (Enter = keep):"],
+        ["amber", "[+] Updated entry #12"],
+      ],
+    },
+    {
+      id: "make",
+      label: "Generate",
+      cmds: [
+        ["keybox make --length 24", "4 to 1024 characters"],
+        ["keybox make --length 64", ""],
+      ],
+      out: [["ok", "Copied to clipboard (clears in 20s): r8$Tq2!mZ#vW6@kL9pN&e4Ys"]],
+    },
+  ];
+
+  const tone = (t) =>
+    ({
+      ok: "text-ok",
+      amber: "text-amber",
+      muted: "text-foreground/80",
+      dim: "text-muted-foreground/70",
+    })[t];
+
+  const all = (g) => g.cmds.map((c) => c[0]).join("\n");
+  const PROMPT = "$";
+</script>
+
+<section id="commands" class="relative py-16 sm:py-24">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6">
+    <SectionHeading eyebrow="Commands" title="Three verbs. That's the whole tool." subtitle="add, get, make." />
+
+    <div class="mx-auto mt-12 max-w-4xl">
+      <Tabs>
+        <div class="flex overflow-x-auto pb-1 [scrollbar-width:none]">
+          <TabsList class="mx-auto h-10 shrink-0 rounded-full border border-border bg-surface p-1">
+            <for each="(g, i) of groups" key="g.id">
+              <TabsTrigger group="kb-cmd" value="{g.id}" defaultChecked="{i === 0}" class="rounded-full px-3.5 text-[13px] has-checked:bg-amber has-checked:text-primary-foreground has-checked:shadow-none sm:px-4">
+                {g.label}
+              </TabsTrigger>
+            </for>
+          </TabsList>
+        </div>
+
+        <for each="g of groups" key="g.id">
+          <TabsContent value="{g.id}" class="mt-6">
+            <div class="panel !rounded-2xl">
+              <div class="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
+                <span class="font-mono text-xs text-muted-foreground">keybox {g.id === 'make' ? 'make' : g.id === 'add' ? 'add' : 'get'}</span>
+                <CopyButton text="{all(g)}" label="Copy commands" />
+              </div>
+              <div class="overflow-x-auto px-5 py-4 font-mono text-[13px] leading-7">
+                <for each="c of g.cmds">
+                  <p class="whitespace-pre"><span class="select-none text-amber">{PROMPT} </span>{c[0]}<if when="c[1]"><span class="text-muted-foreground/60">  # {c[1]}</span></if></p>
+                </for>
+              </div>
+              <div class="overflow-x-auto rounded-b-2xl border-t border-dashed border-border bg-black/25 px-5 py-4 font-mono text-[13px] leading-6">
+                <if when="g.table">
+                  <table class="mb-1 overflow-hidden rounded-lg border-separate border-spacing-0 border border-border text-left">
+                    <thead>
+                      <tr><for each="(c, ci) of g.table.cols"><th class="border-b border-border px-3 py-1 font-medium text-amber {ci ? 'border-l' : ''}">{c}</th></for></tr>
+                    </thead>
+                    <tbody>
+                      <for each="r of g.table.rows">
+                        <tr><for each="(v, vi) of r"><td class="px-3 py-1 whitespace-nowrap {vi ? 'border-l border-border' : ''} {!vi ? 'text-amber' : v === '-' ? 'text-muted-foreground/60' : 'text-foreground/90'}">{v}</td></for></tr>
+                      </for>
+                    </tbody>
+                  </table>
+                </if>
+                <for each="o of g.out">
+                  <p class="min-h-6 whitespace-pre {tone(o[0])}">{o[1]}</p>
+                </for>
+              </div>
+            </div>
+          </TabsContent>
+        </for>
+      </Tabs>
+    </div>
+  </div>
+</section>

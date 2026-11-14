@@ -1,0 +1,47 @@
+<script>
+  import Anchor from "../ui/Anchor/Anchor";
+  import Icon from "../ui/Icon/Icon";
+  import Terminal from "./Terminal";
+  import PlatformIcons from "./PlatformIcons";
+  import { arrowRight, terminal } from "../../utils/icons.js";
+</script>
+
+<section id="top" class="relative isolate overflow-hidden pt-[calc(var(--nav-height)+3rem)] pb-20 sm:pt-[calc(var(--nav-height)+5rem)] sm:pb-28">
+  <!-- warm light ribbons behind the terminal -->
+  <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10">
+    <div class="absolute -top-40 right-[-20%] h-[640px] w-[900px] rounded-[50%] bg-[radial-gradient(closest-side,rgba(244,166,58,0.22),transparent)] blur-2xl [animation:kb-drift_18s_ease-in-out_infinite]"></div>
+    <div class="absolute top-24 right-[-10%] h-[340px] w-[820px] -rotate-12 rounded-[50%] border-t-2 border-amber/25 blur-[2px]"></div>
+    <div class="absolute top-36 right-[-14%] h-[380px] w-[860px] -rotate-[10deg] rounded-[50%] border-t border-amber/15"></div>
+    <div class="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-background"></div>
+  </div>
+
+  <div class="mx-auto grid max-w-6xl items-center gap-14 px-4 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
+    <div>
+      <p class="eyebrow mb-6"><span class="size-1.5 rounded-full bg-ok shadow-[0_0_8px_var(--ok)]"></span> Offline · Open source · AES-256</p>
+      <h1 class="font-display text-[clamp(2.6rem,7vw,4.6rem)] leading-[0.98] font-bold tracking-[-0.035em]">
+        Your passwords.<br />
+        <span class="text-amber-gradient">Your keys.</span>
+      </h1>
+      <p class="mt-6 max-w-[34rem] text-lg leading-relaxed text-muted-foreground">
+        KeyBox is an offline password manager that lives in your terminal. Every password is encrypted on your machine and kept in
+        portable JSON files &mdash; on your laptop, or on a USB stick in your pocket.
+      </p>
+      <div class="mt-9 flex flex-wrap items-center gap-3">
+        <Anchor href="#install" size="lg" class="h-12 rounded-full px-6 text-[15px] font-semibold shadow-[0_10px_40px_-10px_rgba(244,166,58,0.7)]">
+          Get KeyBox <Icon icon="{arrowRight}" class="size-4" />
+        </Anchor>
+        <Anchor href="#commands" variant="outline" size="lg" class="h-12 rounded-full border-foreground/20 bg-transparent px-6 text-[15px] hover:border-foreground/40">
+          <Icon icon="{terminal}" class="size-4" /> See commands
+        </Anchor>
+      </div>
+      <div class="mt-10 flex items-center gap-5">
+        <PlatformIcons />
+      </div>
+    </div>
+
+    <div class="relative lg:pl-4">
+      <div aria-hidden="true" class="absolute -inset-10 -z-10 rounded-[3rem] bg-[radial-gradient(closest-side,rgba(244,166,58,0.18),transparent)]"></div>
+      <Terminal />
+    </div>
+  </div>
+</section>
