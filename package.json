@@ -1,25 +1,34 @@
 {
-  "name": "pwd-manager",
-  "version": "1.0.0",
-  "description": "A CLI tool to for managing passwords",
-  "main": "index.js",
-  "scripts": {},
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/eissapk/pwd-manager.git"
+  "name": "keybox",
+  "description": "Olum App",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run css && concurrently -k -n css,app -c magenta,green \"npm run css:watch\" \"npm run dev:app\"",
+    "build": "olum-compiler build",
+    "start": "olum-compiler start",
+    "css": "tailwindcss -i src/main.css -o public/main.css",
+    "css:watch": "npm run css -- --watch",
+    "dev:app": "olum-compiler dev"
   },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/eissapk/pwd-manager/issues"
+  "olum": {
+    "SITE_URL": "https://www.olumjs.top",
+    "SSG_DELAY": 0
   },
-  "homepage": "https://github.com/eissapk/pwd-manager#readme",
+  "keywords": [
+    "olum"
+  ],
+  "author": "Eissa Saber",
+  "license": "ISC",
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "colors": "^1.4.0",
-    "commander": "^9.4.1",
-    "copy-paste": "^1.3.0",
-    "inquirer": "^8.2.0"
+    "olum": "^0.13.0",
+    "olum-router": "^0.6.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.5",
+    "concurrently": "^10.0.7",
+    "olum-compiler": "^2.1.3",
+    "olum-devtool": "^1.0.5",
+    "tailwindcss": "^4.3.5"
   }
 }
