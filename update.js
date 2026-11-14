@@ -1,65 +1,35 @@
-const { modulesPath, prompt, encrypt } = require("./olum");
-const fs = require("fs");
+const { modulesPath, prompt, encrypt, saveJson } = require("./olum");
 const path = require("path");
 const colors = require(modulesPath + "/colors");
 
-function updateEntry(db, filteredEntries) {
-  if (filteredEntries.length) {
-    const entry = filteredEntries[0];
-    const dbPath = path.resolve(__dirname, "./db.json");
-    if (!fs.existsSync(dbPath)) return console.error(colors.red("DB doesn't exist @: " + dbPath));
+function updateEntry(entry, db, key) {
+  const dbPath = path.resolve(__dirname, "./db.json");
+  const label = "#" + entry.id + " " + entry.name + " (" + entry.username + ")";
 
-    prompt([{ type: "confirm", name: "question", message: "The entry will be " + colors.yellow("updated") + ", Are you sure" }], function (data) {
-      if (!data.question) return;
+  prompt([{ type: "confirm", name: "question", message: "Entry " + label + " will be " + colors.yellow("updated") + ", Are you sure" }], function (data) {
+    if (!data.question) return;
 
-      const id = entry.id;
-      const newEntry = { name: null, location: null, username: null, login: null, password: null, id };
+    console.log(colors.gray("Enter = keep current value, '-' = clear it"));
+    const fields = ["name", "location", "username", "login"];
+    const questions = fields.map((f) => ({ type: "input", name: f, message: "New " + f + " [" + (entry[f] || "") + "]: " }));
+    questions.push({ type: "password", name: "password", message: "New password (Enter = keep): " });
 
-      // ask for new values
-      prompt([{ type: "input", name: "name", message: "Add name: " }], function (data2) {
-        const name = data2.name.trim();
-        if (name != "") newEntry.name = name;
-        prompt([{ type: "input", name: "location", message: "Add location: " }], function (data3) {
-          const location = data3.location.trim();
-          if (location != "") newEntry.location = location;
-          prompt([{ type: "input", name: "username", message: "Add username: " }], function (data4) {
-            const username = data4.username.trim();
-            if (username != "") newEntry.username = username;
-            prompt([{ type: "input", name: "login", message: "Add login: " }], function (data5) {
-              const login = data5.login.trim();
-              if (login != "") newEntry.login = login;
-              prompt([{ type: "password", name: "password", message: "Add password: " }], function (data6) {
-                const password = data6.password.trim();
-                if (password != "") newEntry.password = encrypt(password).str;
-                next();
-              });
-            });
-          });
-        });
+    prompt(questions, function (answers) {
+      fields.forEach((f) => {
+        const value = answers[f].trim();
+        if (value === "-" && f !== "name") entry[f] = "";
+        else if (value !== "" && value !== "-") entry[f] = value;
       });
+      if (answers.password !== "") entry.password = encrypt(answers.password, key);
 
-      // update values
-      function next() {
-        db.accounts.find((obj) => {
-          if (obj.id == id) {
-            if (newEntry.name) obj.name = newEntry.name;
-            if (newEntry.location) obj.location = newEntry.location;
-            if (newEntry.username) obj.username = newEntry.username;
-            if (newEntry.login) obj.login = newEntry.login;
-            if (newEntry.password) obj.password = newEntry.password;
-          }
-        });
-        console.log(colors.yellow("[+] Updated entry."));
-
-        try {
-          fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-          console.log(colors.yellow("[+] Updated db."));
-        } catch (err) {
-          console.log(colors.red("Error while updating entry!"), err);
-        }
+      try {
+        saveJson(dbPath, db); // entry is a reference into db.accounts
+        console.log(colors.yellow("[+] Updated entry " + "#" + entry.id));
+      } catch (err) {
+        console.log(colors.red("Error while updating entry!"), err);
       }
     });
-  }
+  });
 }
 
 module.exports = updateEntry;

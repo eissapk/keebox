@@ -75,6 +75,22 @@ pass make --length 20 # make random strong password of 20 chars
 
 ##### Create master password
 
+The first `pass add` / `pass get` asks you to create one automatically. To add another master password later:
+
 ```
 node config.js
 ```
+
+##### Remove a master password
+
+```
+node config.js remove
+```
+
+##### Encryption
+
+Each password is encrypted (AES-256-GCM) with one vault key. The vault key is stored in `credentials.json`, locked by each master password (scrypt + random salt), so `db.json` can't be read without a master password. Keep `db.json` and `credentials.json` together; if you forget every master password, the data can't be recovered.
+
+Old setups are upgraded automatically on first unlock. The old files are kept as `db.json.v1.bak` / `credentials.json.v1.bak`. `db.json.v1.bak` can be read **without** a master password, so delete it once you've checked your entries.
+
+> `db.json` / `credentials.json` are created automatically if missing, and every save keeps the previous version as `db.json.bak` / `credentials.json.bak`.

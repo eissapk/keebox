@@ -1,3 +1,7 @@
 **/node_modules
 node/**/node
 node/**/node.*
+db.json
+credentials.json
+*.bak
+*.tmp

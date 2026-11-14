@@ -1,2 +1,2 @@
-start "" node/win/node.exe index.js %*
+start "" "%~dp0node\win\node.exe" "%~dp0index.js" %*
 pause

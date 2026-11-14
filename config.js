@@ -1,36 +1,70 @@
-const { prompt, exists, hashPwd, modulesPath } = require("./olum");
+const { prompt, modulesPath, loadJson, saveJson } = require("./olum");
+const { dbPath, credPath, makeSlot, findSlot, hasMaster, unlock } = require("./vault");
+const crypto = require("crypto");
 const colors = require(modulesPath + "/colors");
-const fs = require("fs");
-const path = require("path");
 
-// connect to db
-const fileName = "credentials.json";
-let db = null;
-try {
-  db = JSON.parse(fs.readFileSync(path.resolve(__dirname, "./" + fileName)).toString());
-} catch (err) {
-  return console.error(colors.red("Couldn't connect to db!"), "\n", err);
+// usage: node config.js          -> add master password
+//        node config.js remove   -> remove a master password
+if (require.main === module) main();
+module.exports = { createMaster };
+
+function main() {
+  let cred = null;
+  let db = null;
+  try {
+    cred = loadJson(credPath, { slots: [] });
+    db = loadJson(dbPath, { accounts: [] }); // make sure db.json exists too
+  } catch (err) {
+    return console.error(colors.red("Couldn't connect to db! (backups: credentials.json.bak, db.json.bak)"), "\n", err);
+  }
+  if (process.argv[2] === "remove") remove(cred, db);
+  else add(cred, db);
 }
 
-prompt([{ type: "password", name: "password", message: "Choose a MASTER PASSWORD: " }], function (data) {
-  const password = data.password.trim();
-  prompt([{ type: "password", name: "password", message: "Re-type: " }], function (data2) {
-    const password2 = data2.password.trim();
-    if (password != password2) return console.log(colors.red("MASTER PASSWORD not matched"));
-    if (exists(password, db.secrets)) return console.log(colors.yellow("Password exists!"));
-    next(password);
+function add(cred, db) {
+  if (!hasMaster(cred)) return createMaster(cred, crypto.randomBytes(32)); // first time: new vault key
+
+  // adding another master password requires an existing one
+  prompt([{ type: "password", name: "password", message: "Current MASTER PASSWORD: " }], function (data) {
+    const key = unlock(data.password.trim(), cred, db);
+    if (!key) return console.log(colors.red("Wrong password!"));
+    createMaster(cred, key);
   });
-});
+}
 
-function next(password) {
-  const hashedPassword = hashPwd(password);
-  db.secrets.push(hashedPassword); // push new password
-  console.log(colors.green("[+] Added password."));
+// ask for a new master password, save its slot for `vaultKey`, then cb(vaultKey)
+function createMaster(cred, vaultKey, cb) {
+  prompt([{ type: "password", name: "password", message: "Choose a MASTER PASSWORD: " }], function (data) {
+    const password = data.password.trim();
+    if (!password) return console.log(colors.red("MASTER PASSWORD can't be empty"));
+    prompt([{ type: "password", name: "password", message: "Re-type: " }], function (data2) {
+      if (password != data2.password.trim()) return console.log(colors.red("MASTER PASSWORD not matched"));
+      if (findSlot(password, cred).key) return console.log(colors.yellow("Password exists!"));
+      cred.slots = cred.slots || [];
+      cred.slots.push(makeSlot(password, vaultKey));
+      try {
+        saveJson(credPath, cred);
+        console.log(colors.green("[+] Added password."));
+      } catch (err) {
+        return console.log(colors.red("Error while saving credentials!"), err);
+      }
+      if (cb) cb(vaultKey);
+    });
+  });
+}
 
-  try {
-    fs.writeFileSync(path.resolve(__dirname, "./" + fileName), JSON.stringify(db, null, 2));
-    console.log(colors.green("[+] Updated db."));
-  } catch (err) {
-    console.log(colors.red("Error while adding password!"), err);
-  }
+function remove(cred, db) {
+  prompt([{ type: "password", name: "password", message: "MASTER PASSWORD to remove: " }], function (data) {
+    const password = data.password.trim();
+    if (!unlock(password, cred, db)) return console.log(colors.red("Password not found!")); // also upgrades old setups
+    const { index } = findSlot(password, cred);
+    if (cred.slots.length === 1) return console.log(colors.yellow("Can't remove the only MASTER PASSWORD"));
+    cred.slots.splice(index, 1);
+    try {
+      saveJson(credPath, cred);
+      console.log(colors.green("[-] Removed password."));
+    } catch (err) {
+      console.log(colors.red("Error while saving credentials!"), err);
+    }
+  });
 }

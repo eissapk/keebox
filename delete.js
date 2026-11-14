@@ -1,28 +1,22 @@
-const { modulesPath, prompt } = require("./olum");
-const fs = require("fs");
+const { modulesPath, prompt, saveJson } = require("./olum");
 const colors = require(modulesPath + "/colors");
 const path = require("path");
 
-function deleteEntry(db, filteredEntries) {
-  if (filteredEntries.length) {
-    const entry = filteredEntries[0];
-    const dbPath = path.resolve(__dirname, "./db.json");;
-    if (!fs.existsSync(dbPath)) return console.error(colors.red("DB doesn't exist @: " + dbPath));
+function deleteEntry(entry, db) {
+  const dbPath = path.resolve(__dirname, "./db.json");
+  const label = "#" + entry.id + " " + entry.name + " (" + entry.username + ")";
 
-    prompt([{ type: "confirm", name: "question", message: "The entry will be " + colors.yellow("deleted") + ", Are you sure" }], function (data) {
-      if (!data.question) return;
+  prompt([{ type: "confirm", name: "question", message: "Entry " + label + " will be " + colors.yellow("deleted") + ", Are you sure" }], function (data) {
+    if (!data.question) return;
 
-      db.accounts = db.accounts.filter((obj) => obj.id != entry.id);
-      console.log(colors.yellow("[-] Deleted entry."));
-
-      try {
-        fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-        console.log(colors.yellow("[+] Updated db."));
-      } catch (err) {
-        console.log(colors.red("Error while deleting entry!"), err);
-      }
-    });
-  }
+    db.accounts = db.accounts.filter((obj) => obj.id != entry.id);
+    try {
+      saveJson(dbPath, db);
+      console.log(colors.yellow("[-] Deleted entry " + label));
+    } catch (err) {
+      console.log(colors.red("Error while deleting entry!"), err);
+    }
+  });
 }
 
 module.exports = deleteEntry;

@@ -1,5 +1,4 @@
-const { modulesPath, prompt, encrypt } = require("./olum");
-const fs = require("fs");
+const { modulesPath, prompt, encrypt, saveJson } = require("./olum");
 const path = require("path");
 const colors = require(modulesPath + "/colors");
 
@@ -15,9 +14,8 @@ function mkEntryId(arr) {
   return nextId;
 }
 
-function addEntry(db, entry) {
+function addEntry(db, entry, key) {
   const dbPath = path.resolve(__dirname, "./db.json");
-  if (!fs.existsSync(dbPath)) return console.error(colors.red("DB doesn't exist @: " + dbPath));
 
   const entryExists = db.accounts.find((obj) => {
     if (entry["name"] == obj["name"] && entry["location"] == obj["location"] && entry["username"] == obj["username"] && entry["login"] == obj["login"]) return obj;
@@ -25,15 +23,14 @@ function addEntry(db, entry) {
   if (entryExists) return console.log(colors.yellow("Entry exists!"));
 
   prompt([{ type: "password", name: "password", message: "Add password: " }], function (data) {
-    entry.password = encrypt(data.password.trim()).str;
+    entry.password = encrypt(data.password, key);
     entry.id = mkEntryId(db.accounts);
     // console.log(entry);
     db.accounts.push(entry); // push new entry
-    console.log(colors.green("[+] Added entry."));
 
     try {
-      fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
-      console.log(colors.green("[+] Updated db."));
+      saveJson(dbPath, db);
+      console.log(colors.green("[+] Added entry #" + entry.id));
     } catch (err) {
       console.log(colors.red("Error while adding entry!"), err);
     }

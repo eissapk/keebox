@@ -1,6 +1,7 @@
-const { modulesPath, mkPass, prompt, exists, isAndroid } = require("./olum");
-const fs = require("fs");
-const path = require("path");
+const { modulesPath, mkPass, prompt, isAndroid, loadJson, copyToClipboard } = require("./olum");
+const { dbPath, credPath, hasMaster, unlock } = require("./vault");
+const { createMaster } = require("./config");
+const crypto = require("crypto");
 const colors = require(modulesPath + "/colors");
 const commander = require(modulesPath + "/commander");
 const pkgJSON = require("./package.json");
@@ -9,12 +10,12 @@ const addEntry = require("./add");
 
 // connect to db
 let db = null;
-let secrets = null;
+let cred = null;
 try {
-  db = JSON.parse(fs.readFileSync(path.resolve(__dirname, "./db.json")).toString());
-  secrets = JSON.parse(fs.readFileSync(path.resolve(__dirname, "./credentials.json")).toString()).secrets;
+  db = loadJson(dbPath, { accounts: [] });
+  cred = loadJson(credPath, { slots: [] });
 } catch (err) {
-  return console.error(colors.red("Couldn't connect to db!"), "\n", err);
+  return console.error(colors.red("Couldn't connect to db! (backups: db.json.bak, credentials.json.bak)"), "\n", err);
 }
 
 const cmd = new commander.Command();
@@ -43,6 +44,19 @@ cmd.on("command:*", (operands) => {
 
 cmd.parse(process.argv);
 
+// ask master password -> vault key
+function askMaster(cb) {
+  if (!hasMaster(cred)) {
+    console.log(colors.yellow("No MASTER PASSWORD yet, let's create one."));
+    return createMaster(cred, crypto.randomBytes(32), cb);
+  }
+  prompt([{ type: "password", name: "password", message: "MASTER PASSWORD:" }], function (data) {
+    var key = unlock(data.password.trim(), cred, db);
+    if (!key) return console.error(colors.red("Wrong password!"));
+    cb(key);
+  });
+}
+
 function add() {
   var obj = cmd.opts();
   if (!obj.name) return console.error(colors.red("Missing --name argument!"));
@@ -50,11 +64,7 @@ function add() {
   if (!obj.username) return console.error(colors.red("Missing --username argument!"));
   if (!obj.login) obj.login = "";
 
-  prompt([{ type: "password", name: "password", message: "MASTER PASSWORD:" }], function (data) {
-    var pwdExists = exists(data.password, secrets);
-    if (!pwdExists) return console.error(colors.red("Wrong password!"));
-    addEntry(db, obj);
-  });
+  askMaster((key) => addEntry(db, obj, key));
 }
 
 function get() {
@@ -66,27 +76,28 @@ function get() {
     if (opts.username) query.username = opts.username;
     if (opts.login) query.login = opts.login;
 
-  prompt([{ type: "password", name: "password", message: "MASTER PASSWORD:" }], function (data) {
-    var pwdExists = exists(data.password, secrets);
-    if (!pwdExists) return console.error(colors.red("Wrong password!"));
-    getEntry(db, query, opts);
-  });
+  askMaster((key) => getEntry(db, query, opts, key));
 }
 
 function make() {
   var obj = cmd.opts();
   if (!obj.length) return console.error(colors.red("Missing --length argument!"));
-  var pass = mkPass(+obj.length);
+  var length = Number(obj.length);
+  if (!Number.isInteger(length) || length < 4 || length > 1024) return console.error(colors.red("--length must be a number between 4 and 1024"));
+  var pass = mkPass(length);
 
   if (isAndroid()) {
-      console.log(colors.green(pass));
-      return process.exit(1);
+    console.log(colors.green(pass));
+    return process.exit(0);
   }
 
-  const ncp = require(modulesPath + "/copy-paste");
-  ncp.copy(pass, () => {
-    console.log(colors.green("Copied to clipboard:"), pass);
-    process.exit(1);
+  copyToClipboard(pass, (err, seconds) => {
+    if (err) {
+      console.log(colors.yellow("Couldn't copy to clipboard:"), pass);
+      return process.exit(0);
+    }
+    console.log(colors.green("Copied to clipboard" + (seconds ? " (clears in " + seconds + "s)" : "") + ":"), pass);
+    process.exit(0);
   });
 
 }

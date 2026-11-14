@@ -1,4 +1,4 @@
-const { modulesPath, decrypt, isAndroid } = require("./olum");
+const { modulesPath, decrypt, isAndroid, copyToClipboard } = require("./olum");
 const colors = require(modulesPath + "/colors");
 const deleteEntry = require("./delete");
 const updateEntry = require("./update");
@@ -9,71 +9,51 @@ function showTable(arr) {
   console.log(arr.length >= 2 ? arr.length + " rows" : arr.length + " row");
 }
 
+// id: exact match, other fields: case-insensitive "contains"
 function filter(arr, query) {
   const keys = Object.keys(query);
-  const filteredAcc = [];
-  arr.forEach(obj => {
-    if (keys.length === 1) {
-      const key = keys[0];
-      const value = query[key];
-      if (String(obj[key]).includes(value)) filteredAcc.push(obj);
-    } else if (keys.length === 2) {
-      const key = keys[0];
-      const value = query[key];
-      const key2 = keys[1];
-      const value2 = query[key2];
-      if (String(obj[key]).includes(value) && String(obj[key2]).includes(value2)) filteredAcc.push(obj);
-    } else if (keys.length === 3) {
-      const key = keys[0];
-      const value = query[key];
-      const key2 = keys[1];
-      const value2 = query[key2];
-      const key3 = keys[2];
-      const value3 = query[key3];
-      if (String(obj[key]).includes(value) && String(obj[key2]).includes(value2) && String(obj[key3]).includes(value3)) filteredAcc.push(obj);
-    } else if (keys.length === 4) {
-      const key = keys[0];
-      const value = query[key];
-      const key2 = keys[1];
-      const value2 = query[key2];
-      const key3 = keys[2];
-      const value3 = query[key3];
-      const key4 = keys[3];
-      const value4 = query[key4];
-      if (String(obj[key]).includes(value) && String(obj[key2]).includes(value2) && String(obj[key3]).includes(value3) && String(obj[key4]).includes(value4)) filteredAcc.push(obj);
-    }
-  });
-  return filteredAcc;
+  return arr.filter((obj) =>
+    keys.every((key) => {
+      if (key === "id") return String(obj.id) === String(query.id).trim();
+      return String(obj[key] ?? "").toLowerCase().includes(String(query[key]).toLowerCase());
+    })
+  );
 }
 
-function getEntry(db, query, opts) {
+function copyEntry(entry, db, key) {
+  let password;
+  try {
+    password = decrypt(entry.password, key);
+  } catch (err) {
+    console.error(colors.red("Couldn't decrypt password of entry #" + entry.id + " (empty or damaged)"));
+    return process.exit(1);
+  }
+
+  if (isAndroid()) {
+    console.log(colors.green(password));
+    return process.exit(0);
+  }
+
+  copyToClipboard(password, (err, seconds) => {
+    if (err) {
+      console.error(colors.red("Couldn't copy to clipboard (is xclip installed on linux?)"), err.message);
+      return process.exit(1);
+    }
+    console.log(colors.cyan("Copied password of entry #" + entry.id + " to clipboard" + (seconds ? ", clears in " + seconds + "s" : "")));
+    process.exit(0);
+  });
+}
+
+function getEntry(db, query, opts, key) {
   if (!Object.keys(query).length) return showTable(db.accounts); // show all table
 
   const filteredEntries = filter(db.accounts, query);
   showTable(filteredEntries); // show matched items
 
-  // console.log({ opts });
-
-  if (opts.update) return updateEntry(db, filteredEntries);
-  if (opts.delete) return deleteEntry(db, filteredEntries);
-  if (opts.copy) {
-    if (filteredEntries.length) {
-      let password = filteredEntries[0].password;
-      const data = password.split(".");
-      password = decrypt({ iv: data[0], key: data[1], encryptedData: data[2] });
-
-      if (isAndroid()) {
-        console.log(colors.green(password));
-        return process.exit(1);
-      }
-
-      var ncp = require(modulesPath + "/copy-paste");
-      ncp.copy(password, () => {
-        console.log(colors.cyan("Copied password of 1st entry to clipboard"));
-        process.exit(1);
-      });
-    }
-  }
+  const action = opts.update ? updateEntry : opts.delete ? deleteEntry : opts.copy ? copyEntry : null;
+  if (!action || !filteredEntries.length) return;
+  if (filteredEntries.length > 1) return console.log(colors.yellow("Multiple entries matched, narrow it down (e.g. --id <id>)"));
+  action(filteredEntries[0], db, key);
 }
 
 module.exports = getEntry;
