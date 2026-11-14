@@ -3,7 +3,7 @@ const colors = require(modulesPath + "/colors");
 const deleteEntry = require("./delete");
 const updateEntry = require("./update");
 
-const COLUMNS = ["id", "name", "location", "username", "login"];
+const COLUMNS = ["id", "name", "location", "username", "login", "notes"];
 
 const width = (str) => [...str].length;
 const clean = (val) => String(val ?? "").replace(/\s+/g, " ").trim();

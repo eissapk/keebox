@@ -10,7 +10,7 @@ function updateEntry(entry, db, key) {
     if (!data.question) return;
 
     console.log(colors.gray("Enter = keep current value, '-' = clear it"));
-    const fields = ["name", "location", "username", "login"];
+    const fields = ["name", "location", "username", "login", "notes"];
     const questions = fields.map((f) => ({ type: "input", name: f, message: "New " + f + " [" + (entry[f] || "") + "]: " }));
     questions.push({ type: "password", name: "password", message: "New password (Enter = keep): " });
 

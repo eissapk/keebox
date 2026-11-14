@@ -25,6 +25,7 @@ cmd.option("--name <name>", "Include account name - use it with 'get/add' comman
 cmd.option("--location <location>", "Include account url - use it with 'get/add' commands");
 cmd.option("--username <username>", "Include account username - use it with 'get/add' commands");
 cmd.option("--login <login>", "Include account login - use it with 'get/add' commands");
+cmd.option("--notes <notes>", "Include account notes - use it with 'get/add' commands");
 
 cmd.option("--copy", "Copy account password to clipboard - use it with 'get' command");
 cmd.option("--update", "Update account in db - use it with 'get' command");
@@ -63,6 +64,7 @@ function add() {
   if (!obj.location) return console.error(colors.red("Missing --location argument!"));
   if (!obj.username) return console.error(colors.red("Missing --username argument!"));
   if (!obj.login) obj.login = "";
+  if (!obj.notes) obj.notes = "";
 
   askMaster((key) => addEntry(db, obj, key));
 }
@@ -75,6 +77,7 @@ function get() {
     if (opts.location) query.location = opts.location;
     if (opts.username) query.username = opts.username;
     if (opts.login) query.login = opts.login;
+    if (opts.notes) query.notes = opts.notes;
 
   askMaster((key) => getEntry(db, query, opts, key));
 }
