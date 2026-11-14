@@ -93,4 +93,84 @@ Each password is encrypted (AES-256-GCM) with one vault key. The vault key is st
 
 Old setups are upgraded automatically on first unlock. The old files are kept as `db.json.v1.bak` / `credentials.json.v1.bak`. `db.json.v1.bak` can be read **without** a master password, so delete it once you've checked your entries.
 
+##### Decryption flow
+
+```
+                         pass get --id 11 --copy
+                                    │
+                                    ▼
+                    ┌───────────────────────────────┐
+                    │ Any master password exists?   │  (credentials.json)
+                    └───────────────┬───────────────┘
+                         no │               │ yes
+                            ▼               ▼
+         ┌──────────────────────────┐   ┌──────────────────────────┐
+         │ "No MASTER PASSWORD yet" │   │ Ask MASTER PASSWORD      │
+         │ choose + re-type         │   │ (trim spaces)            │
+         │ new random vault key     │   └────────────┬─────────────┘
+         │ save slot, continue ───┐ │                │
+         └────────────────────────┼─┘                ▼
+                                  │      ╔═══════════════════════════════╗
+                                  │      ║ PART 1: MASTER PASSWORD       ║
+                                  │      ║ For each slot in credentials: ║
+                                  │      ╚═══════════════╤═══════════════╝
+                                  │                      ▼
+                                  │      ┌──────────────────────────────┐
+                                  │      │ scrypt(password, salt, n)    │
+                                  │      │       → temporary key        │
+                                  │      └──────────────┬───────────────┘
+                                  │                     ▼
+                                  │      ┌──────────────────────────────┐
+                                  │      │ AES-GCM decrypt slot "key"   │
+                                  │      │ (v2.iv.tag.data)             │
+                                  │      └───────┬──────────────┬───────┘
+                                  │      tag OK  │              │ tag fails
+                                  │              │              ▼
+                                  │              │   ┌──────────────────────┐
+                                  │              │   │ more slots? try next │
+                                  │              │   │ none left: old bcrypt│
+                                  │              │   │ match? upgrade it    │
+                                  │              │   │ else "Wrong password"│──► stop
+                                  │              │   └──────────────────────┘
+                                  │              ▼
+                                  │      ┌──────────────────────────────┐
+                                  └─────►│   VAULT KEY (in memory only) │
+                                         └──────────────┬───────────────┘
+                                                        ▼
+                                         ┌──────────────────────────────┐
+                                         │ Old-format entries in db?    │
+                                         │ yes: back up to .v1.bak,     │
+                                         │ re-encrypt with vault key    │
+                                         └──────────────┬───────────────┘
+                                                        ▼
+                                         ╔═══════════════════════════════╗
+                                         ║ PART 2: ACCOUNT PASSWORD      ║
+                                         ╚═══════════════╤═══════════════╝
+                                                         ▼
+                                         ┌──────────────────────────────┐
+                                         │ Filter db.json accounts      │
+                                         │ exactly 1 match? else stop   │
+                                         └──────────────┬───────────────┘
+                                                        ▼
+                                         ┌──────────────────────────────┐
+                                         │ split "v2.iv.tag.data"       │
+                                         │ AES-GCM decrypt with         │
+                                         │ VAULT KEY + iv + tag         │
+                                         └───────┬──────────────┬───────┘
+                                         tag OK  │              │ fails
+                                                 ▼              ▼
+                                  ┌───────────────────────┐  ┌───────────────────┐
+                                  │ plain password        │  │ "empty or damaged"│
+                                  │ Termux: print it      │  └───────────────────┘
+                                  │ else: clipboard,      │
+                                  │ auto-clear in 20s     │
+                                  └───────────────────────┘
+```
+
+| Step | File | Uses |
+|---|---|---|
+| Ask for or create the master password | `index.js` → `askMaster`, `config.js` → `createMaster` | master password |
+| Master password → vault key | `vault.js` → `unlock` / `findSlot` / `openSlot` | `salt`, `n`, slot `key` |
+| Vault key → account password | `olum.js` → `decrypt` (called from `get.js` → `copyEntry`) | `iv`, `tag`, `data` |
+
 > `db.json` / `credentials.json` are created automatically if missing, and every save keeps the previous version as `db.json.bak` / `credentials.json.bak`.
