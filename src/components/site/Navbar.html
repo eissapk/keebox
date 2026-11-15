@@ -34,7 +34,7 @@
     : 'border-b border-transparent'}"
 >
   <nav class="mx-auto flex h-(--nav-height) max-w-6xl items-center justify-between px-4 sm:px-6" aria-label="Main">
-    <a href="#top" aria-label="KeyBox home" onclick="close()"><Logo /></a>
+    <a href="#top" aria-label="KeeBox home" onclick="close()"><Logo /></a>
 
     <ul class="hidden items-center gap-1 md:flex">
       <for each="item of nav" key="item.href">
@@ -46,7 +46,7 @@
 
     <div class="flex items-center gap-2">
       <Anchor href="#install" class="h-9 rounded-full px-4 font-semibold shadow-[0_0_24px_-6px_rgba(244,166,58,0.6)]">
-        Get KeyBox <Icon icon="{arrowRight}" class="size-4" />
+        Get KeeBox <Icon icon="{arrowRight}" class="size-4" />
       </Anchor>
       <Button variant="ghost" size="icon" class="md:hidden" ariaLabel="{state.open ? 'Close menu' : 'Open menu'}" onclick="{toggle}">
         <Icon icon="{state.open ? x : menu}" class="size-5" />

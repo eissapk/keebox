@@ -1,7 +1,7 @@
 <script>
   import { props } from "olum";
 
-  // The KeyBox mark: a taped shipping package — your vault, packed up and
+  // The KeeBox mark: a taped shipping package — your vault, packed up and
   // ready to carry anywhere. Hovering the logo gives it a small hop.
   const { size = "md" } = props();
   const box = () => (size === "lg" ? "size-14" : size === "mark" ? "size-12" : "size-9");
@@ -39,6 +39,6 @@
     <path d="M4 10 16 16 28 10M16 16v13" fill="none" stroke="#7a3f0c" stroke-opacity=".25" stroke-width=".5" stroke-linejoin="round" />
   </svg>
   <if when="size !== 'mark'">
-    <span class="font-display {text()} font-bold tracking-tight">Key<span class="text-amber">Box</span></span>
+    <span class="font-display {text()} font-bold tracking-tight">Kee<span class="text-amber">Box</span></span>
   </if>
 </span>

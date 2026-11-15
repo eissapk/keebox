@@ -6,11 +6,11 @@
   const mkPass = (n) => Array.from(crypto.getRandomValues(new Uint32Array(n)), (v) => CHARS[v % CHARS.length]).join("");
 
   const scene = () => [
-    { cmd: "keybox make --length 24" },
+    { cmd: "keebox make --length 24" },
     { out: "Copied to clipboard (clears in 20s):", tone: "ok" },
     { out: mkPass(24), tone: "amber" },
     { gap: true },
-    { cmd: "keybox get --name github --copy" },
+    { cmd: "keebox get --name github --copy" },
     { out: "? MASTER PASSWORD: ••••••••••••", tone: "muted" },
     { out: "Copied password of entry #12 to clipboard, clears in 20s", tone: "ok", tick: true },
   ];
@@ -65,9 +65,9 @@
     <span class="size-3 rounded-full bg-[#ff5f57]"></span>
     <span class="size-3 rounded-full bg-[#febc2e]"></span>
     <span class="size-3 rounded-full bg-[#28c840]"></span>
-    <span class="flex-1 pr-12 text-center font-mono text-xs text-muted-foreground">keybox — zsh</span>
+    <span class="flex-1 pr-12 text-center font-mono text-xs text-muted-foreground">keebox — zsh</span>
   </div>
-  <div class="h-[248px] overflow-hidden px-5 py-5 font-mono text-[13px] leading-6 sm:text-sm" aria-label="Example KeyBox terminal session" role="img">
+  <div class="h-[248px] overflow-hidden px-5 py-5 font-mono text-[13px] leading-6 sm:text-sm" aria-label="Example KeeBox terminal session" role="img">
     <for each="(line, i) of state.lines" key="i">
       <if when="line.cmd">
         <p class="whitespace-pre-wrap break-all"><span class="select-none text-amber">{PROMPT} </span>{line.cmd}</p>

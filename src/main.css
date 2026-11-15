@@ -1,6 +1,6 @@
 @import "tailwindcss" source("./");
 
-/* KeyBox site theme.
+/* KeeBox site theme.
    One dark, warm palette. The olum-ui components read the --olum-* tokens
    below (same names as src/components/ui/olum-ui.css), so they pick up the
    amber accent without per-component overrides. */

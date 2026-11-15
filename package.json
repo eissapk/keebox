@@ -1,11 +1,11 @@
 {
-  "name": "keybox",
+  "name": "keebox",
   "description": "Olum App",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "npm run css && concurrently -k -n css,app -c magenta,green \"npm run css:watch\" \"npm run dev:app\"",
-    "build": "rm -rf ./docs && olum-compiler build && mv ./dist ./docs && echo keybox.eissa.top > ./docs/CNAME",
+    "build": "rm -rf ./docs && olum-compiler build && mv ./dist ./docs && echo keebox.eissa.top > ./docs/CNAME",
     "start": "olum-compiler start",
     "css": "tailwindcss -i src/main.css -o public/main.css",
     "css:watch": "npm run css -- --watch",

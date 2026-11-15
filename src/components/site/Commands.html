@@ -12,8 +12,8 @@
       id: "add",
       label: "Add",
       cmds: [
-        ["keybox add --name google --username foo@gmail.com --location google.com", ""],
-        ['keybox add --name github --username foo --location github.com --notes "2FA via phone"', "with notes"],
+        ["keebox add --name google --username foo@gmail.com --location google.com", ""],
+        ['keebox add --name github --username foo --location github.com --notes "2FA via phone"', "with notes"],
       ],
       out: [
         ["muted", "? MASTER PASSWORD: ••••••••••••"],
@@ -25,9 +25,9 @@
       id: "find",
       label: "Find",
       cmds: [
-        ["keybox get", "every account, as a table"],
-        ["keybox get --id 2", "exact id"],
-        ["keybox get --name git", "any field, case-insensitive"],
+        ["keebox get", "every account, as a table"],
+        ["keebox get --id 2", "exact id"],
+        ["keebox get --name git", "any field, case-insensitive"],
       ],
       table: {
         cols: ["ID", "NAME", "LOCATION", "USERNAME", "LOGIN", "NOTES"],
@@ -42,8 +42,8 @@
       id: "copy",
       label: "Copy",
       cmds: [
-        ["keybox get --name github --copy", "one match → clipboard"],
-        ["keybox get --id 12 --copy", "narrow it down by id"],
+        ["keebox get --name github --copy", "one match → clipboard"],
+        ["keebox get --id 12 --copy", "narrow it down by id"],
       ],
       out: [
         ["muted", "? MASTER PASSWORD: ••••••••••••"],
@@ -56,8 +56,8 @@
       id: "edit",
       label: "Update & delete",
       cmds: [
-        ["keybox get --id 12 --update", "Enter keeps a value, '-' clears it"],
-        ["keybox get --id 14 --delete", "asks before it deletes"],
+        ["keebox get --id 12 --update", "Enter keeps a value, '-' clears it"],
+        ["keebox get --id 14 --delete", "asks before it deletes"],
       ],
       out: [
         ["muted", "? Entry #12 github (foo) will be updated, Are you sure? Yes"],
@@ -71,8 +71,8 @@
       id: "make",
       label: "Generate",
       cmds: [
-        ["keybox make --length 24", "4 to 1024 characters"],
-        ["keybox make --length 64", ""],
+        ["keebox make --length 24", "4 to 1024 characters"],
+        ["keebox make --length 64", ""],
       ],
       out: [["ok", "Copied to clipboard (clears in 20s): r8$Tq2!mZ#vW6@kL9pN&e4Ys"]],
     },
@@ -110,7 +110,7 @@
           <TabsContent value="{g.id}" class="mt-6">
             <div class="panel !rounded-2xl">
               <div class="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
-                <span class="font-mono text-xs text-muted-foreground">keybox {g.id === 'make' ? 'make' : g.id === 'add' ? 'add' : 'get'}</span>
+                <span class="font-mono text-xs text-muted-foreground">keebox {g.id === 'make' ? 'make' : g.id === 'add' ? 'add' : 'get'}</span>
                 <CopyButton text="{all(g)}" label="Copy commands" />
               </div>
               <div class="overflow-x-auto px-5 py-4 font-mono text-[13px] leading-7">
