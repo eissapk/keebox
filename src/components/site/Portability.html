@@ -3,7 +3,8 @@
   import CopyButton from "./CopyButton";
 
   const BRACES = "{ }";
-  const ALIAS = "alias keebox='node /media/usb/keebox/index.js'";
+  const HOME = "export KEEBOX_HOME=/path/to/vault-folder";
+  const ALIAS = "alias keebox='node /media/usb/keebox/bin/index.js'";
 </script>
 
 <section id="portability" class="relative overflow-hidden py-16 sm:py-24">
@@ -20,6 +21,16 @@
       <div class="panel mt-7 flex items-center gap-2 py-1.5 pr-1.5 pl-4">
         <code class="min-w-0 flex-1 py-1 font-mono text-[13px] leading-5 break-all text-foreground/85">{ALIAS}</code>
         <CopyButton text="{ALIAS}" label="Copy alias" />
+      </div>
+
+      <p class="mt-5 max-w-lg text-sm leading-relaxed text-muted-foreground">
+        Installed with npm? The vault lives in <code class="font-mono text-foreground/85">~/.keebox</code>, outside the npm folder, so updating or
+        uninstalling never touches it. Point <code class="font-mono text-foreground/85">KEEBOX_HOME</code> at an encrypted drive or a backed-up folder to
+        keep it anywhere else.
+      </p>
+      <div class="panel mt-4 flex items-center gap-2 py-1.5 pr-1.5 pl-4">
+        <code class="min-w-0 flex-1 py-1 font-mono text-[13px] leading-5 break-all text-foreground/85">{HOME}</code>
+        <CopyButton text="{HOME}" label="Copy KEEBOX_HOME export" />
       </div>
 
       <div class="mt-7"><PlatformIcons variant="tiles" /></div>

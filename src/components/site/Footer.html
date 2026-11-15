@@ -2,7 +2,7 @@
   import Logo from "./Logo";
   import PlatformIcons from "./PlatformIcons";
   import Separator from "../ui/Separator/Separator";
-  import { REPO } from "../../utils/site.js";
+  import { REPO, NPM } from "../../utils/site.js";
 </script>
 
 <footer class="mx-auto max-w-6xl px-4 sm:px-6">
@@ -10,11 +10,12 @@
   <div class="flex flex-col gap-6 py-10 md:flex-row md:items-center">
     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
       <Logo />
-      <p class="text-sm text-muted-foreground">An offline, open-source password manager.</p>
+      <p class="text-sm text-muted-foreground">An offline, open-source password manager. MIT licensed.</p>
     </div>
     <div class="flex flex-wrap items-center gap-6 md:ml-auto">
       <a href="{REPO + '#readme'}" target="_blank" rel="noreferrer" class="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">Documentation</a>
       <a href="{REPO}" target="_blank" rel="noreferrer" class="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">GitHub</a>
+      <a href="{NPM}" target="_blank" rel="noreferrer" class="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">npm</a>
       <PlatformIcons size="sm" />
     </div>
   </div>

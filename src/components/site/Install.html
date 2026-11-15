@@ -3,11 +3,11 @@
   import Badge from "../ui/Badge/Badge";
   import Icon from "../ui/Icon/Icon";
   import CopyButton from "./CopyButton";
-  import PlatformIcons from "./PlatformIcons";
-  import { REPO, CLONE } from "../../utils/site.js";
+  import { REPO, CLONE, NPM, NPM_INSTALL } from "../../utils/site.js";
   import { download, codeXml, github, arrowRight } from "../../utils/icons.js";
 
-  const STEPS = ["cd password-manager", "npm i", "node index.js --help"];
+  const NPM_STEPS = ["keebox -h"];
+  const SOURCE_STEPS = ["cd keebox", "node bin/index.js -h"];
   const PROMPT = "$";
 </script>
 
@@ -16,7 +16,9 @@
     <div class="flex flex-col justify-center py-4 md:col-span-2 lg:col-span-1 lg:pr-4">
       <span class="eyebrow w-fit">Download &amp; install</span>
       <h2 class="mt-4 font-display text-[clamp(1.9rem,3.6vw,2.6rem)] leading-[1.05] font-bold tracking-[-0.03em]">Get KeeBox.<br /><span class="text-foreground/45">It's easy.</span></h2>
-      <p class="mt-4 text-sm leading-relaxed text-muted-foreground">Build it from source today. One-file binaries for every desktop platform are next on the roadmap.</p>
+      <p class="mt-4 text-sm leading-relaxed text-muted-foreground">
+        Requires Node.js 18 or newer. Zero dependencies, so there's nothing else to download. Standalone binaries are next on the roadmap.
+      </p>
     </div>
 
     <div class="panel flex min-w-0 flex-col p-6 sm:p-7">
@@ -24,16 +26,24 @@
         <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-amber/10 text-amber ring-1 ring-amber/20"><Icon icon="{download}" class="size-5" /></span>
         <div class="flex-1">
           <div class="flex flex-wrap items-center gap-2">
-            <h3 class="font-display text-lg font-semibold">Download binaries</h3>
-            <Badge variant="outline" class="border-amber/40 text-amber">Soon</Badge>
+            <h3 class="font-display text-lg font-semibold">Install with npm</h3>
+            <Badge variant="outline" class="border-amber/40 text-amber">Recommended</Badge>
           </div>
-          <p class="mt-1 text-sm text-muted-foreground">A single executable that runs next to your vault files. No Node install needed.</p>
+          <p class="mt-1 text-sm text-muted-foreground">A global <code class="font-mono text-foreground/85">keebox</code> command. Your vault lives in <code class="font-mono text-foreground/85">~/.keebox</code>.</p>
         </div>
       </div>
-      <div class="mt-6"><PlatformIcons variant="tiles" /></div>
+      <div class="mt-6 rounded-xl border border-border bg-black/30">
+        <div class="flex items-center gap-2 border-b border-border py-1.5 pr-1.5 pl-3.5">
+          <code class="min-w-0 flex-1 py-1 font-mono text-[12.5px] leading-5 break-all text-foreground/90">{NPM_INSTALL}</code>
+          <CopyButton text="{NPM_INSTALL}" label="Copy npm install command" />
+        </div>
+        <div class="px-3.5 py-2.5 font-mono text-[12.5px] leading-6 text-muted-foreground">
+          <for each="s of NPM_STEPS"><p><span class="select-none text-amber/70">{PROMPT} </span>{s}</p></for>
+        </div>
+      </div>
       <div class="mt-auto pt-6">
-        <Anchor href="{REPO + '/releases'}" target="_blank" variant="outline" class="h-10 w-full rounded-full border-amber/40 bg-transparent text-amber hover:bg-amber/10 hover:text-amber">
-          Watch for releases <Icon icon="{arrowRight}" class="size-4" />
+        <Anchor href="{NPM}" target="_blank" variant="outline" class="h-10 w-full rounded-full border-amber/40 bg-transparent text-amber hover:bg-amber/10 hover:text-amber">
+          View on npm <Icon icon="{arrowRight}" class="size-4" />
         </Anchor>
       </div>
     </div>
@@ -42,8 +52,8 @@
       <div class="flex items-start gap-3">
         <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-amber/10 text-amber ring-1 ring-amber/20"><Icon icon="{codeXml}" class="size-5" /></span>
         <div>
-          <h3 class="font-display text-lg font-semibold">Build from source</h3>
-          <p class="mt-1 text-sm text-muted-foreground">Read the code, then run it yourself.</p>
+          <h3 class="font-display text-lg font-semibold">Run from source</h3>
+          <p class="mt-1 text-sm text-muted-foreground">About 1,300 lines of plain Node.js. Read it, then run it &mdash; no <code class="font-mono text-foreground/85">npm install</code> needed.</p>
         </div>
       </div>
       <div class="mt-6 rounded-xl border border-border bg-black/30">
@@ -52,7 +62,7 @@
           <CopyButton text="{CLONE}" label="Copy git clone command" />
         </div>
         <div class="px-3.5 py-2.5 font-mono text-[12.5px] leading-6 text-muted-foreground">
-          <for each="s of STEPS"><p><span class="select-none text-amber/70">{PROMPT} </span>{s}</p></for>
+          <for each="s of SOURCE_STEPS"><p><span class="select-none text-amber/70">{PROMPT} </span>{s}</p></for>
         </div>
       </div>
       <div class="mt-auto pt-5">

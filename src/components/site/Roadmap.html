@@ -3,6 +3,10 @@
   import Badge from "../ui/Badge/Badge";
   import SectionHeading from "./SectionHeading";
   import { roadmap } from "../../utils/site.js";
+  import { check } from "../../utils/icons.js";
+
+  const shipped = (g) => g.items.filter((i) => i.done).length;
+  const planned = (g) => g.items.length - shipped(g);
 </script>
 
 <section id="roadmap" class="relative py-16 sm:py-24">
@@ -15,14 +19,15 @@
           <div aria-hidden="true" class="absolute -top-16 -right-16 size-40 rounded-full bg-amber/10 blur-2xl"></div>
           <div class="relative flex items-center justify-between">
             <span class="grid size-10 place-items-center rounded-xl bg-amber/10 text-amber ring-1 ring-amber/20"><Icon icon="{group.icon}" class="size-5" /></span>
-            <Badge variant="outline" class="font-mono text-[10px] text-muted-foreground">{group.items.length} planned</Badge>
+            <Badge variant="outline" class="font-mono text-[10px] text-muted-foreground">{shipped(group)} shipped · {planned(group)} planned</Badge>
           </div>
           <h3 class="relative mt-5 font-display text-xl font-semibold">{group.title}</h3>
           <ul class="relative mt-4 space-y-1">
             <for each="item of group.items" key="item.text">
-              <li class="flex items-start gap-3 rounded-lg px-2 py-2 text-sm text-foreground/80 transition-colors -mx-2 hover:bg-white/[0.03]">
-                <Icon icon="{item.icon}" class="mt-0.5 size-4 shrink-0 text-amber/80" />
-                <span>{item.text}</span>
+              <li class="flex items-start gap-3 rounded-lg px-2 py-2 text-sm transition-colors -mx-2 hover:bg-white/[0.03] {item.done ? 'text-muted-foreground' : 'text-foreground/80'}">
+                <Icon icon="{item.done ? check : item.icon}" class="mt-0.5 size-4 shrink-0 {item.done ? 'text-ok' : 'text-amber/80'}" />
+                <span class="flex-1">{item.text}</span>
+                <if when="item.done"><span class="mt-0.5 font-mono text-[10px] tracking-wider text-ok/80 uppercase">Shipped</span></if>
               </li>
             </for>
           </ul>

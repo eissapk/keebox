@@ -1,0 +1,23 @@
+<script>
+  import Icon from "../ui/Icon/Icon";
+  import SectionHeading from "./SectionHeading";
+  import { tradeoffs } from "../../utils/site.js";
+</script>
+
+<section id="tradeoffs" class="relative py-16 sm:py-24">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6">
+    <SectionHeading eyebrow="Trade-offs" title="What you trade." subtitle="You're in charge of your files. That's the point." />
+
+    <ul class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <for each="t of tradeoffs" key="t.title">
+        <li class="panel flex items-start gap-4 p-5 sm:p-6">
+          <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-white/[0.04] text-foreground/70 ring-1 ring-border"><Icon icon="{t.icon}" class="size-5" /></span>
+          <div class="min-w-0">
+            <h3 class="font-display text-[17px] font-semibold tracking-tight">{t.title}</h3>
+            <p class="mt-1.5 text-sm leading-relaxed text-muted-foreground">{t.text}</p>
+          </div>
+        </li>
+      </for>
+    </ul>
+  </div>
+</section>

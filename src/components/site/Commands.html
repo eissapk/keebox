@@ -11,9 +11,10 @@
     {
       id: "add",
       label: "Add",
+      title: "keebox add",
       cmds: [
-        ["keebox add --name google --username foo@gmail.com --location google.com", ""],
-        ['keebox add --name github --username foo --location github.com --notes "2FA via phone"', "with notes"],
+        ["keebox add --name google --username foo@gmail.com --url google.com", ""],
+        ['keebox add --name github --username foo --url github.com --login foo@mail.com --notes "2FA via phone"', "login/notes are encrypted"],
       ],
       out: [
         ["muted", "? MASTER PASSWORD: ••••••••••••"],
@@ -24,57 +25,101 @@
     {
       id: "find",
       label: "Find",
+      title: "keebox get",
       cmds: [
         ["keebox get", "every account, as a table"],
-        ["keebox get --id 2", "exact id"],
-        ["keebox get --name git", "any field, case-insensitive"],
+        ["keebox get --id 12", "exact id"],
+        ["keebox get --name git", "name, url or username, case-insensitive"],
       ],
       table: {
-        cols: ["ID", "NAME", "LOCATION", "USERNAME", "LOGIN", "NOTES"],
+        cols: ["ID", "NAME", "URL", "USERNAME", "LOGIN", "NOTES", "CREATED", "UPDATED"],
         rows: [
-          ["12", "github", "github.com", "foo", "-", "2FA via phone"],
-          ["14", "gitlab", "gitlab.com", "foo", "-", "-"],
+          ["12", "github", "github.com", "foo", "***", "***", "02-11-2026", "-"],
+          ["14", "gitlab", "gitlab.com", "foo", "-", "-", "05-11-2026", "-"],
         ],
       },
       out: [["dim", " 2 entries"]],
     },
     {
       id: "copy",
-      label: "Copy",
+      label: "Copy & show",
+      title: "keebox get",
       cmds: [
-        ["keebox get --name github --copy", "one match → clipboard"],
-        ["keebox get --id 12 --copy", "narrow it down by id"],
+        ["keebox get --id 12 --cp", "password → clipboard"],
+        ["keebox get --id 12 --show", "decrypted login/notes"],
       ],
       out: [
         ["muted", "? MASTER PASSWORD: ••••••••••••"],
-        ["ok", "Copied password of entry #12 to clipboard, clears in 20s"],
+        ["ok", "✓ Copied password of entry #12 to clipboard, clears in 20s"],
+        ["dim", ""],
+        ["amber", "login: foo@mail.com"],
+        ["amber", "notes: 2FA via phone"],
         ["dim", ""],
         ["dim", "# on Android (Termux) the password is printed instead"],
       ],
     },
     {
       id: "edit",
-      label: "Update & delete",
+      label: "Edit & delete",
+      title: "keebox get",
       cmds: [
-        ["keebox get --id 12 --update", "Enter keeps a value, '-' clears it"],
-        ["keebox get --id 14 --delete", "asks before it deletes"],
+        ["keebox get --id 12 --edit", "Enter keeps a value, '-' clears it"],
+        ["keebox get --id 14 --rm", "asks before it deletes"],
       ],
       out: [
         ["muted", "? Entry #12 github (foo) will be updated, Are you sure? Yes"],
         ["dim", "Enter = keep current value, '-' = clear it"],
-        ["muted", "? New notes [2FA via phone]: 2FA via app"],
+        ["muted", "? New notes [***]: 2FA via app"],
         ["muted", "? New password (Enter = keep):"],
         ["amber", "[+] Updated entry #12"],
+        ["amber", "[-] Deleted entry #14 gitlab (foo)"],
       ],
     },
     {
       id: "make",
       label: "Generate",
+      title: "keebox make",
       cmds: [
-        ["keebox make --length 24", "4 to 1024 characters"],
-        ["keebox make --length 64", ""],
+        ["keebox make --size 24", "4 to 1024 characters"],
+        ["keebox make --size 64", ""],
       ],
       out: [["ok", "Copied to clipboard (clears in 20s): r8$Tq2!mZ#vW6@kL9pN&e4Ys"]],
+    },
+    {
+      id: "backup",
+      label: "Export & check",
+      title: "keebox export · import · check",
+      cmds: [
+        ["keebox export", "decrypted CSV, readable by you only"],
+        ["keebox export --name google --out google.csv", "just the matches"],
+        ["keebox import --file accounts.csv", "same columns, duplicates skipped"],
+        ["keebox check", "read-only damage check"],
+      ],
+      out: [
+        ["ok", "[+] Exported 14 entries to /home/you/keebox-export-2026-11-16.csv"],
+        ["amber", "! This file is NOT encrypted, delete it when you're done with it."],
+        ["dim", ""],
+        ["ok", "✓ 14 entries checked, no damage found"],
+      ],
+    },
+    {
+      id: "recovery",
+      label: "Recovery",
+      title: "keebox recovery · recover · master",
+      cmds: [
+        ["keebox recovery", "create the 12-word phrase, shown once"],
+        ["keebox recover", "lost credentials.json or forgot the password"],
+        ["keebox master", "change the master password"],
+      ],
+      out: [
+        ["amber", "! Write these 12 words down (in order) and keep them offline. They are shown only once."],
+        ["dim", ""],
+        ["muted", "   1. ••••••••    5. ••••••••    9. ••••••••"],
+        ["muted", "   2. ••••••••    6. ••••••••   10. ••••••••"],
+        ["dim", "   …"],
+        ["dim", ""],
+        ["ok", "✓ Recovery phrase confirmed."],
+      ],
     },
   ];
 
@@ -92,7 +137,7 @@
 
 <section id="commands" class="relative py-16 sm:py-24">
   <div class="mx-auto max-w-6xl px-4 sm:px-6">
-    <SectionHeading eyebrow="Commands" title="Three verbs. That's the whole tool." subtitle="add, get, make." />
+    <SectionHeading eyebrow="Commands" title="A handful of commands." subtitle="That's the whole tool." />
 
     <div class="mx-auto mt-12 max-w-4xl">
       <Tabs>
@@ -110,7 +155,7 @@
           <TabsContent value="{g.id}" class="mt-6">
             <div class="panel !rounded-2xl">
               <div class="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
-                <span class="font-mono text-xs text-muted-foreground">keebox {g.id === 'make' ? 'make' : g.id === 'add' ? 'add' : 'get'}</span>
+                <span class="font-mono text-xs text-muted-foreground">{g.title}</span>
                 <CopyButton text="{all(g)}" label="Copy commands" />
               </div>
               <div class="overflow-x-auto px-5 py-4 font-mono text-[13px] leading-7">

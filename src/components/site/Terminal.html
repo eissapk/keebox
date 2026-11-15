@@ -6,11 +6,11 @@
   const mkPass = (n) => Array.from(crypto.getRandomValues(new Uint32Array(n)), (v) => CHARS[v % CHARS.length]).join("");
 
   const scene = () => [
-    { cmd: "keebox make --length 24" },
+    { cmd: "keebox make --size 24" },
     { out: "Copied to clipboard (clears in 20s):", tone: "ok" },
     { out: mkPass(24), tone: "amber" },
     { gap: true },
-    { cmd: "keebox get --name github --copy" },
+    { cmd: "keebox get --name github --cp" },
     { out: "? MASTER PASSWORD: ••••••••••••", tone: "muted" },
     { out: "Copied password of entry #12 to clipboard, clears in 20s", tone: "ok", tick: true },
   ];
