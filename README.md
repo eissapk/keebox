@@ -10,7 +10,15 @@
 </p>
 
 <p align="center">
-  <a href="https://keybox.eissa.top">Website</a> ·
+  <a href="https://www.npmjs.com/package/keebox"><img src="https://img.shields.io/npm/v/keebox?color=f5a524&label=npm" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/keebox"><img src="https://img.shields.io/npm/dm/keebox?color=f5a524" alt="npm downloads"></a>
+  <a href="https://opensource.org/license/mit"><img src="https://img.shields.io/badge/license-MIT-f5a524" alt="MIT license"></a>
+  <img src="https://img.shields.io/badge/node-%3E%3D18-f5a524?logo=nodedotjs&logoColor=white" alt="node >= 18">
+  <img src="https://img.shields.io/badge/dependencies-0-7ccf8a" alt="zero dependencies">
+</p>
+
+<p align="center">
+  <a href="https://keebox.eissa.top">Website</a> ·
   <a href="#get-started">Get started</a> ·
   <a href="#commands-using-the-pass-alias">Commands</a> ·
   <a href="#encryption">Security</a>
