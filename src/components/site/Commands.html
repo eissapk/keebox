@@ -14,7 +14,7 @@
       title: "keebox add",
       cmds: [
         ["keebox add --name google --username foo@gmail.com --url google.com", ""],
-        ['keebox add --name github --username foo --url github.com --login foo@mail.com --notes "2FA via phone"', "login/notes are encrypted"],
+        ['keebox add --name github --username foo --url github.com --notes "2FA"', "notes are encrypted"],
       ],
       out: [
         ["muted", "? MASTER PASSWORD: ••••••••••••"],
@@ -34,7 +34,7 @@
       table: {
         cols: ["ID", "NAME", "URL", "USERNAME", "LOGIN", "NOTES", "CREATED", "UPDATED"],
         rows: [
-          ["12", "github", "github.com", "foo", "***", "***", "02-11-2026", "-"],
+          ["12", "github", "github.com", "foo", "-", "***", "02-11-2026", "-"],
           ["14", "gitlab", "gitlab.com", "foo", "-", "-", "05-11-2026", "-"],
         ],
       },
@@ -52,8 +52,8 @@
         ["muted", "? MASTER PASSWORD: ••••••••••••"],
         ["ok", "✓ Copied password of entry #12 to clipboard, clears in 20s"],
         ["dim", ""],
-        ["amber", "login: foo@mail.com"],
-        ["amber", "notes: 2FA via phone"],
+        ["amber", "login: -"],
+        ["amber", "notes: 2FA"],
         ["dim", ""],
         ["dim", "# on Android (Termux) the password is printed instead"],
       ],
