@@ -2,12 +2,12 @@
 // supports: --opt <value>, --opt=value, boolean --flag, commands, options before or after the command,
 // -h/--help, help [command], -V/--version, "--" (end of options), help wrapped to the terminal width.
 // errors go to stderr with exit code 1. Uses process.exitCode (not process.exit) so piped output is never cut off.
-const path = require("path");
+const colors = require("./colors");
 
 // spec: { version, description, options: [["--id <id>", "desc"], ["--cp", "desc"]], commands: { add: "desc" } }
 // returns { command, opts, args }, or null when it already handled help/version/an error
 function parseArgs(argv, spec) {
-  const name = path.basename(process.argv[1] || "cli", ".js");
+  const name = "keebox";
   const builtins = [
     ["-V, --version", "output the version number"],
     ["-h, --help", "display help for command"],
@@ -18,8 +18,10 @@ function parseArgs(argv, spec) {
     return { flags, desc, short: m[1], long: m[2], key: m[2].replace(/-(\w)/g, (_, c) => c.toUpperCase()), takesValue: flags.endsWith(">") };
   });
 
+  // "✗ error: unknown option '--nme'" in red, then the "(Did you mean --name?)" hint in gray
   const fail = (msg) => {
-    process.stderr.write("error: " + msg + "\n");
+    const [first, ...rest] = msg.split("\n");
+    process.stderr.write(colors.red("✗ error: " + first) + "\n" + rest.map((l) => colors.gray(l.trim()) + "\n").join(""));
     process.exitCode = 1;
     return null;
   };
@@ -63,16 +65,19 @@ function parseArgs(argv, spec) {
     process.exitCode = 1;
     return null;
   }
-  if (!isCommand(command)) return fail(`unknown command '${command}'` + suggest(command, Object.keys(spec.commands)) + "\n Try running --help");
+  if (!isCommand(command)) return fail(`unknown command '${command}'` + suggest(command, Object.keys(spec.commands)) + "\nTry running --help");
   delete opts.help;
   delete opts.version;
   return { command, opts, args: args.slice(1) };
 
+  // website look: amber section titles and "$ keebox ..." usage line, off-white terms, gray descriptions
   function help(cmd) {
-    if (cmd) return `Usage: ${name} ${cmd} [options]\n\n${spec.commands[cmd]}\n\nOptions:\n${table([builtins[1]])}\n`;
+    const heading = (t) => colors.bold.amber(t);
+    const usage = (args) => colors.amber("$ ") + colors.text(name + " " + args);
+    if (cmd) return `${heading("Usage")}\n  ${usage(cmd + " [options]")}\n\n${colors.gray(spec.commands[cmd])}\n\n${heading("Options")}\n${table([builtins[1]])}\n`;
     const commands = Object.entries(spec.commands).concat([["help [command]", "display help for command"]]);
     const options = spec.options.concat(builtins);
-    return `Usage: ${name} [options] [command]\n\n${spec.description}\n\nOptions:\n${table(options, commands)}\n\nCommands:\n${table(commands, options)}\n`;
+    return `${heading("Usage")}\n  ${usage("[options] [command]")}\n\n${colors.gray(spec.description)}\n\n${heading("Options")}\n${table(options, commands)}\n\n${heading("Commands")}\n${table(commands, options)}\n`;
   }
 }
 
@@ -80,7 +85,9 @@ function parseArgs(argv, spec) {
 function table(rows, otherRows = []) {
   const pad = Math.max(...rows.concat(otherRows).map(([term]) => term.length));
   const width = Math.max((process.stdout.columns || 80) - pad - 4, 40);
-  return rows.map(([term, desc]) => "  " + term.padEnd(pad) + "  " + wrap(desc, width).join("\n" + " ".repeat(pad + 4))).join("\n");
+  // "<value>" / "[command]" placeholders dim, the rest of the term off-white
+  const styleTerm = (term) => term.replace(/([<\[][^>\]]+[>\]])|([^<\[]+)/g, (_, arg, text) => (arg ? colors.dim(arg) : colors.text(text)));
+  return rows.map(([term, desc]) => "  " + styleTerm(term) + " ".repeat(pad - term.length) + "  " + wrap(desc, width).map((l) => colors.gray(l)).join("\n" + " ".repeat(pad + 4))).join("\n");
 }
 
 function wrap(text, width) {

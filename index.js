@@ -1,4 +1,4 @@
-const { mkPass, askPassword, loadData, copyOrPrint, run, FIELDS, SECRET_FIELDS, colors, hasMaster, unlock, createMaster, parseArgs } = require("./utils");
+const { mkPass, askPassword, loadData, copyOrPrint, run, FIELDS, SECRET_FIELDS, log, hasMaster, unlock, createMaster, parseArgs } = require("./utils");
 const crypto = require("crypto");
 const pkgJSON = require("./package.json");
 const { getEntry, addEntry, exportEntries, importEntries, checkDb, createRecovery, recoverVault } = require("./options");
@@ -39,22 +39,22 @@ async function askMaster(cred, db) {
   if (!hasMaster(cred)) {
     // a new vault key would make the existing accounts unreadable
     if (db.accounts.length || db.recovery) {
-      console.error(colors.red("credentials.json is missing or has no master password, but db.json has data."));
-      console.error(colors.yellow("Run 'recover' with your recovery phrase, or restore credentials.json.bak"));
+      log.error("credentials.json is missing or has no master password, but db.json has data.");
+      log.warnErr("Run 'recover' with your recovery phrase, or restore credentials.json.bak");
       return null;
     }
-    console.log(colors.yellow("No MASTER PASSWORD yet, let's create one."));
+    log.warn("No MASTER PASSWORD yet, let's create one.");
     const key = await createMaster(cred, crypto.randomBytes(32));
-    if (key) console.log(colors.gray("Tip: run 'recovery' to create a 12-word recovery phrase, in case credentials.json is lost"));
+    if (key) log.hint("Tip: run 'recovery' to create a 12-word recovery phrase, in case credentials.json is lost");
     return key;
   }
   const key = unlock((await askPassword("MASTER PASSWORD:")).trim(), cred);
-  if (!key) console.error(colors.red("Wrong password!"));
+  if (!key) log.error("Wrong password!");
   return key;
 }
 
 async function add(opts, db, cred) {
-  for (const f of ["name", "url", "username"]) if (!opts[f]) return console.error(colors.red("Missing --" + f + " argument!"));
+  for (const f of ["name", "url", "username"]) if (!opts[f]) return log.error("Missing --" + f + " argument!");
   const entry = {};
   FIELDS.forEach((f) => (entry[f] = opts[f] || ""));
 
@@ -63,7 +63,7 @@ async function add(opts, db, cred) {
 }
 
 async function get(opts, db, cred) {
-  for (const f of SECRET_FIELDS) if (opts[f]) return console.error(colors.red("Can't search by --" + f + ", it's encrypted (read it with --show)"));
+  for (const f of SECRET_FIELDS) if (opts[f]) return log.error("Can't search by --" + f + ", it's encrypted (read it with --show)");
   const query = {};
   ["id", ...FIELDS].forEach((f) => opts[f] && (query[f] = opts[f]));
 
@@ -72,14 +72,14 @@ async function get(opts, db, cred) {
 }
 
 async function make(opts) {
-  if (!opts.size) return console.error(colors.red("Missing --size argument!"));
+  if (!opts.size) return log.error("Missing --size argument!");
   const length = Number(opts.size);
-  if (!Number.isInteger(length) || length < 4 || length > 1024) return console.error(colors.red("--size must be a number between 4 and 1024"));
-  await copyOrPrint(mkPass(length), "password", true);
+  if (!Number.isInteger(length) || length < 4 || length > 1024) return log.error("--size must be a number between 4 and 1024");
+  await copyOrPrint(mkPass(length), "", true);
 }
 
 async function exportCsv(opts, db, cred) {
-  for (const f of SECRET_FIELDS) if (opts[f]) return console.error(colors.red("Can't filter by --" + f + ", it's encrypted"));
+  for (const f of SECRET_FIELDS) if (opts[f]) return log.error("Can't filter by --" + f + ", it's encrypted");
   const query = {};
   ["id", ...FIELDS].forEach((f) => opts[f] && (query[f] = opts[f]));
   const file = opts.out || "keebox-export-" + new Date().toISOString().slice(0, 10) + ".csv";
@@ -87,14 +87,14 @@ async function exportCsv(opts, db, cred) {
 }
 
 async function importCsv(opts, db, cred) {
-  if (!opts.file) return console.error(colors.red("Missing --file argument!"));
+  if (!opts.file) return log.error("Missing --file argument!");
   await importEntries(db, opts.file, () => askMaster(cred, db));
 }
 
 async function check(opts, db, cred) {
   await checkDb(db, cred, async () => {
     const key = unlock((await askPassword("MASTER PASSWORD:")).trim(), cred);
-    if (!key) console.error(colors.red("Wrong password!"));
+    if (!key) log.error("Wrong password!");
     return key;
   });
 }

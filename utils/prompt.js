@@ -1,6 +1,6 @@
 // minimal inquirer replacement, public Node APIs only
 // await prompt([{ type: "input" | "password" | "confirm", name, message, default }]) -> answers
-// - interactive (stdin is a terminal): readline for input/confirm, raw-mode reader for passwords (nothing echoed)
+// - interactive (stdin is a terminal): readline for input/confirm, raw-mode reader for passwords (masked with "•")
 // - piped stdin: one shared line queue, so answers can be scripted: printf 'pw\ny\n' | node index.js get --id 1 --rm
 // - Ctrl+C exits 130; Ctrl+D / end of input cancels with exit 1 (never auto-answers, e.g. "delete? (Y/n)")
 const readline = require("readline");
@@ -29,7 +29,12 @@ async function readTtyLine(label) {
   return answer;
 }
 
-// interactive password: raw mode, nothing echoed (like sudo/ssh); Backspace and Ctrl+U work, pasting works
+// interactive password: raw mode, each char shown as a dim "•" (never the text itself); Backspace and Ctrl+U work, pasting works
+const MASK_ERASE = "\b \b";
+function mask(n) {
+  const { colors } = require("./index");
+  return colors.dim("•".repeat(n));
+}
 function readTtyPassword(label) {
   return new Promise((resolve) => {
     const { stdin } = process;
@@ -49,9 +54,17 @@ function readTtyPassword(label) {
         out.write("\n");
         return resolve(value);
       }
-      if (key.name === "backspace") value = Array.from(value).slice(0, -1).join(""); // whole char, not half an emoji
-      else if (key.ctrl && key.name === "u") value = "";
-      else if (str && !key.ctrl && !key.meta && !/[\x00-\x1f\x7f]/.test(str)) value += str; // skip arrows, tab, etc.
+      const chars = Array.from(value);
+      if (key.name === "backspace") {
+        if (chars.length) out.write(MASK_ERASE);
+        value = chars.slice(0, -1).join(""); // whole char, not half an emoji
+      } else if (key.ctrl && key.name === "u") {
+        out.write(MASK_ERASE.repeat(chars.length));
+        value = "";
+      } else if (str && !key.ctrl && !key.meta && !/[\x00-\x1f\x7f]/.test(str)) {
+        value += str; // skip arrows, tab, etc.
+        out.write(mask(Array.from(str).length));
+      }
     };
     stdin.on("keypress", onKey);
   });
@@ -87,8 +100,9 @@ async function prompt(questions) {
   const read = (label, type) => (!tty ? readPipedLine(label) : type === "password" ? readTtyPassword(label) : readTtyLine(label));
   const answers = {};
   for (const q of questions) {
-    const hint = q.type === "confirm" ? c.gray(q.default === false ? " (y/N)" : " (Y/n)") : "";
-    const label = c.green("? ") + c.bold(String(q.message).trim()) + hint + " ";
+    // website look: "? MASTER PASSWORD: ••••••" with a gray "?", off-white question and dim hints
+    const hint = q.type === "confirm" ? c.dim(q.default === false ? " (y/N)" : " (Y/n)") : "";
+    const label = c.gray("? ") + c.text(String(q.message).trim()) + hint + " ";
     // Git Bash/mintty without winpty: no terminal, so the terminal itself echoes what you type
     if (q.type === "password" && !tty && process.env.MSYSTEM && !process.stdout.isTTY)
       process.stderr.write(c.yellow("warning: input will be visible, run with: winpty node ...\n"));

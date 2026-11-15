@@ -1,4 +1,4 @@
-const { copyEntry, showEntry, drawTable, filterEntries, colors } = require("../utils");
+const { copyEntry, showEntry, drawTable, filterEntries, log } = require("../utils");
 
 async function getEntry(db, query, opts, key) {
   const { deleteEntry, updateEntry } = require("./index"); // here, not at the top: options/index.js loads this file, so its exports are only ready at call time
@@ -9,7 +9,7 @@ async function getEntry(db, query, opts, key) {
 
   const action = opts.edit ? updateEntry : opts.rm ? deleteEntry : opts.cp ? copyEntry : opts.show ? showEntry : null;
   if (!action || !filteredEntries.length) return;
-  if (filteredEntries.length > 1) return console.log(colors.yellow("Multiple entries matched, narrow it down (e.g. --id <id>)"));
+  if (filteredEntries.length > 1) return log.warn("Multiple entries matched, narrow it down (e.g. --id <id>)");
   await action(filteredEntries[0], db, key);
 }
 

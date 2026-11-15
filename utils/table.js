@@ -31,7 +31,7 @@ function fitWidths(widths, maxTotal, fixed) {
 function drawTable(entries) {
   const { FIELDS, SECRET_FIELDS, colors } = require("./index"); // here, not at the top: index.js loads this file, so its exports are only ready at call time
   const COLUMNS = ["id", ...FIELDS, ...DATE_COLUMNS];
-  if (!entries.length) return console.log(colors.cyan("0 entries"));
+  if (!entries.length) return console.log(colors.gray("0 entries"));
 
   const cell = (obj, col) => {
     if (SECRET_FIELDS.includes(col) && obj[col]) return "***";
@@ -43,18 +43,20 @@ function drawTable(entries) {
   const fixed = COLUMNS.map((col, i) => (col === "id" || DATE_COLUMNS.includes(col) ? i : -1)).filter((i) => i !== -1);
   fitWidths(widths, process.stdout.columns || Infinity, fixed);
 
-  const line = (l, m, r) => colors.gray(l + widths.map((w) => "─".repeat(w + 2)).join(m) + r);
-  const bar = colors.gray("│");
+  // website look: dim rounded frame, amber bold headers, amber ids, off-white values, dim "-" for empty cells
+  const line = (l, m, r) => colors.dim(l + widths.map((w) => "─".repeat(w + 2)).join(m) + r);
+  const bar = colors.dim("│");
   const row = (cells) => bar + cells.map((c) => " " + c + " ").join(bar) + bar;
 
-  const out = [line("╭", "┬", "╮"), row(COLUMNS.map((col, i) => colors.bold.cyan(pad(truncate(col.toUpperCase(), widths[i]), widths[i])))), line("├", "┼", "┤")];
+  const out = [line("╭", "┬", "╮"), row(COLUMNS.map((col, i) => colors.bold.amber(pad(truncate(col.toUpperCase(), widths[i]), widths[i])))), line("├", "┼", "┤")];
   rows.forEach((r) => {
     out.push(
       row(
         r.map((val, i) => {
-          if (!val) return colors.gray(pad("-", widths[i]));
+          if (!val) return colors.dim(pad("-", widths[i]));
           const text = pad(truncate(val, widths[i]), widths[i], i === 0);
-          return i === 0 ? colors.yellow(text) : text;
+          if (i === 0) return colors.amber(text);
+          return val === "***" ? colors.gray(text) : colors.text(text);
         })
       )
     );

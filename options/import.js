@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { confirm, encrypt, decryptField, saveOrReport, nextEntryId, dbPath, colors, FIELDS, SECRET_FIELDS } = require("../utils");
+const { confirm, encrypt, decryptField, saveOrReport, nextEntryId, dbPath, log, FIELDS, SECRET_FIELDS } = require("../utils");
 const { parseCsv } = require("../utils/csv");
 
 const REQUIRED = ["name", "password"];
@@ -45,15 +45,15 @@ async function importEntries(db, file, askKey) {
     rows = parseCsv(fs.readFileSync(file, "utf8"));
   } catch (err) {
     process.exitCode = 1;
-    return console.error(colors.red("Couldn't read " + file + ": " + err.message));
+    return log.error("Couldn't read " + file + ": " + err.message);
   }
   const { records, errors } = rowsToRecords(rows);
   if (errors.length) {
     process.exitCode = 1;
-    errors.forEach((e) => console.error(colors.red(e)));
-    return console.error(colors.red("Import aborted, nothing changed"));
+    errors.forEach((e) => log.problem(e));
+    return log.error("Import aborted, nothing changed");
   }
-  if (!records.length) return console.log(colors.yellow("No entries in " + file));
+  if (!records.length) return log.warn("No entries in " + file);
 
   const key = await askKey();
   if (!key) return;
@@ -62,14 +62,14 @@ async function importEntries(db, file, askKey) {
   const seen = new Set();
   for (const e of db.accounts) {
     const login = decryptField(e, "login", key);
-    if (login === null) return console.error(colors.red("Import aborted, fix or delete entry #" + e.id + " first"));
+    if (login === null) return log.error("Import aborted, fix or delete entry #" + e.id + " first");
     seen.add(sameKey({ ...e, login }));
   }
   const fresh = records.filter((r) => !seen.has(sameKey(r)) && seen.add(sameKey(r)));
   const skipped = records.length - fresh.length;
 
   const note = skipped ? " (" + skipped + " already in db, skipped)" : "";
-  if (!fresh.length) return console.log(colors.yellow("Nothing to import" + note));
+  if (!fresh.length) return log.warn("Nothing to import" + note);
   if (!(await confirm("Import " + fresh.length + " entr" + (fresh.length === 1 ? "y" : "ies") + note))) return;
 
   const now = new Date().toISOString();
@@ -83,7 +83,7 @@ async function importEntries(db, file, askKey) {
     entry.updated = isoDate(r.updated) || entry.created;
     db.accounts.push(entry);
   }
-  saveOrReport(dbPath, db, colors.green("[+] Imported " + fresh.length + " entr" + (fresh.length === 1 ? "y" : "ies") + note), "Error while importing!");
+  saveOrReport(dbPath, db, "Imported " + fresh.length + " entr" + (fresh.length === 1 ? "y" : "ies") + note, "Error while importing!", "added");
 }
 
 module.exports = importEntries;

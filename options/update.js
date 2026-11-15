@@ -1,9 +1,9 @@
-const { prompt, confirm, encrypt, saveOrReport, entryLabel, dbPath, FIELDS, SECRET_FIELDS, colors } = require("../utils");
+const { prompt, confirm, encrypt, saveOrReport, entryLabel, dbPath, FIELDS, SECRET_FIELDS, colors, log } = require("../utils");
 
 async function updateEntry(entry, db, key) {
-  if (!(await confirm("Entry " + entryLabel(entry) + " will be " + colors.yellow("updated") + ", Are you sure"))) return;
+  if (!(await confirm("Entry " + entryLabel(entry) + " will be " + colors.amber("updated") + ", Are you sure"))) return;
 
-  console.log(colors.gray("Enter = keep current value, '-' = clear it"));
+  log.hint("Enter = keep current value, '-' = clear it");
   const questions = FIELDS.map((f) => ({ type: "input", name: f, message: "New " + f + " [" + (SECRET_FIELDS.includes(f) && entry[f] ? "***" : entry[f] || "") + "]: " }));
   questions.push({ type: "password", name: "password", message: "New password (Enter = keep): " });
 
@@ -21,11 +21,11 @@ async function updateEntry(entry, db, key) {
     entry.password = encrypt(answers.password, key);
     changed = true;
   }
-  if (!changed) return console.log(colors.gray("Nothing changed"));
+  if (!changed) return log.hint("Nothing changed");
   entry.updated = new Date().toISOString();
 
   // entry is a reference into db.accounts
-  saveOrReport(dbPath, db, colors.yellow("[+] Updated entry #" + entry.id), "Error while updating entry!");
+  saveOrReport(dbPath, db, "Updated entry #" + entry.id, "Error while updating entry!", "updated");
 }
 
 module.exports = updateEntry;

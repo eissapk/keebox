@@ -73,11 +73,12 @@ Clipboard: macOS and Windows/WSL work as is, Linux needs `xclip` (X11) or `wl-cl
 ├── test                 # npm test
 └── utils
     ├── cli.js           # argument parser
-    ├── colors.js
+    ├── colors.js        # KeeBox palette (truecolor / 256 / 16 colors)
     ├── config.js        # create / change the master password
     ├── csv.js
     ├── fields.js
     ├── index.js         # encrypt/decrypt, load/save db, clipboard, helpers
+    ├── log.js           # message styles (✓ / [+] / [-] / [!] / ✗)
     ├── mnemonic.js      # 12-word recovery phrase (BIP39)
     ├── prompt.js
     ├── table.js

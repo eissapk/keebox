@@ -3,6 +3,7 @@ function isAndroid() {
 }
 
 const colors = require("./colors");
+const log = require("./log");
 const { FIELDS, SECRET_FIELDS } = require("./fields");
 const crypto = require("crypto");
 const path = require("path");
@@ -56,7 +57,7 @@ function decryptField(entry, field, key) {
   try {
     return decrypt(entry[field], key);
   } catch (err) {
-    console.error(colors.red("Couldn't decrypt " + field + " of entry #" + entry.id + " (damaged)"));
+    log.error("Couldn't decrypt " + field + " of entry #" + entry.id + " (damaged)");
     process.exitCode = 1;
     return null;
   }
@@ -82,7 +83,7 @@ function loadJson(file, fallback) {
   const fs = require("fs");
   if (!fs.existsSync(file)) {
     saveJson(file, fallback);
-    console.log("Created " + file);
+    log.hint("Created " + file);
   }
   return JSON.parse(fs.readFileSync(file).toString());
 }
@@ -159,20 +160,21 @@ function loadData() {
     if (!cred || typeof cred !== "object" || Array.isArray(cred)) throw new Error("credentials.json must be an object");
     return { db, cred };
   } catch (err) {
-    console.error(colors.red("Couldn't connect to db! (backups: db.json.bak, credentials.json.bak)"), "\n", err);
+    log.error("Couldn't connect to db! (backups: db.json.bak, credentials.json.bak)", "\n", err);
     return null;
   }
 }
 
-// save, then print `okMsg` (already colored) -> true, or print `errMsg` + the error -> false
-function saveOrReport(file, data, okMsg, errMsg) {
+// save, then print `okMsg` with log[kind] ("added", "updated", "removed", "ok") -> true, or print `errMsg` + the error -> false
+function saveOrReport(file, data, okMsg, errMsg, kind = "added") {
   try {
     saveJson(file, data);
   } catch (err) {
-    console.log(colors.red(errMsg), err);
+    log.error(errMsg, err);
+    process.exitCode = 1;
     return false;
   }
-  console.log(okMsg);
+  log[kind](okMsg);
   return true;
 }
 
@@ -189,7 +191,7 @@ async function confirm(message) {
 // run an async entry point: unexpected errors are printed and exit with code 1
 function run(main) {
   main().catch((err) => {
-    console.error(colors.red("Unexpected error:"), err);
+    log.error("Unexpected error:", err);
     process.exitCode = 1;
   });
 }
@@ -200,18 +202,21 @@ function entryLabel(entry) {
 }
 
 // copy to the clipboard (auto-cleared), or print it on Android / when copying fails
-// what: shown in "Copied <what> to clipboard", show: also print the text on success
+// what: shown in "Copied <what> to clipboard" (omitted when empty), show: also print the text on success
+//   show:  "Copied to clipboard (clears in 20s): <text>"   (text in amber)
+//   else:  "✓ Copied password of entry #3 to clipboard, clears in 20s"
 async function copyOrPrint(text, what, show) {
-  if (isAndroid()) return console.log(colors.green(text));
+  if (isAndroid()) return console.log(colors.amber(text));
   let seconds;
   try {
     seconds = await copyToClipboard(text);
   } catch (err) {
-    console.error(colors.yellow("Couldn't copy to clipboard (linux needs xclip, or wl-clipboard on Wayland): " + err.message));
-    return console.log(colors.green(text));
+    log.warnErr("Couldn't copy to clipboard (linux needs xclip, or wl-clipboard on Wayland): " + err.message);
+    return console.log(colors.amber(text));
   }
-  const msg = "Copied " + what + " to clipboard" + (seconds ? ", clears in " + seconds + "s" : "");
-  console.log(show ? colors.green(msg + ":") + " " + text : colors.green(msg));
+  const copied = "Copied " + (what ? what + " " : "") + "to clipboard";
+  if (show) return console.log(colors.green(copied + (seconds ? " (clears in " + seconds + "s)" : "") + ":") + " " + colors.amber(text));
+  log.ok(copied + (seconds ? ", clears in " + seconds + "s" : ""));
 }
 
 // decrypt an entry's password and copy it (or print it, see copyOrPrint)
@@ -220,7 +225,7 @@ async function copyEntry(entry, db, key) {
   try {
     password = decrypt(entry.password, key);
   } catch (err) {
-    console.error(colors.red("Couldn't decrypt password of entry #" + entry.id + " (empty or damaged)"));
+    log.error("Couldn't decrypt password of entry #" + entry.id + " (empty or damaged)");
     process.exitCode = 1;
     return;
   }
@@ -232,7 +237,7 @@ async function showEntry(entry, db, key) {
   for (const f of SECRET_FIELDS) {
     const value = decryptField(entry, f, key);
     if (value === null) return;
-    console.log(colors.bold.cyan(f + ":") + " " + (value || colors.gray("-")));
+    log.field(f, value);
   }
 }
 
@@ -279,6 +284,7 @@ module.exports = {
   encrypt,
   isEncrypted,
   colors,
+  log,
   parseArgs,
   ...require("./mnemonic"),
 };

@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { decrypt, isEncrypted, hasMaster, entryLabel, parseDb, dbPath, colors, FIELDS, SECRET_FIELDS } = require("../utils");
+const { decrypt, isEncrypted, hasMaster, entryLabel, parseDb, dbPath, log, FIELDS, SECRET_FIELDS } = require("../utils");
 
 const ENCRYPTED = ["password", ...SECRET_FIELDS];
 
@@ -89,31 +89,31 @@ async function checkDb(db, cred, askKey) {
   const { accounts } = db;
   const credProblems = checkCredentials(cred, accounts);
   const recoveryProblems = checkRecovery(db.recovery);
-  [...credProblems, ...recoveryProblems].forEach((p) => console.error(colors.red("[!] " + p)));
-  if (db.recovery == null && accounts.length) console.log(colors.gray("No recovery phrase yet, create one with 'recovery'"));
+  [...credProblems, ...recoveryProblems].forEach((p) => log.problem(p));
+  if (db.recovery == null && accounts.length) log.hint("No recovery phrase yet, create one with 'recovery'");
 
   let key = null;
   if (hasMaster(cred) && !credProblems.length) {
     key = await askKey();
     if (!key) return void (process.exitCode = 1);
   } else {
-    console.log(colors.yellow("Can't unlock the vault, checking structure only (no decryption)"));
+    log.warn("Can't unlock the vault, checking structure only (no decryption)");
   }
 
   const damaged = checkEntries(accounts, key);
   const backup = damaged.length ? loadBackup() : null;
   for (const { entry, problems } of damaged) {
     const label = entry && typeof entry === "object" ? entryLabel(entry) : JSON.stringify(entry);
-    console.error(colors.red("[!] " + label + ": " + problems.join(", ")));
-    if (key && healthyInBackup(entry, backup, key)) console.log(colors.gray("    a healthy copy is in db.json.bak"));
+    log.problem(label + ": " + problems.join(", "));
+    if (key && healthyInBackup(entry, backup, key)) log.hint("    a healthy copy is in db.json.bak");
   }
 
   const total = accounts.length + " entr" + (accounts.length === 1 ? "y" : "ies") + " checked";
-  if (!damaged.length && !credProblems.length && !recoveryProblems.length) return console.log(colors.green("[+] " + total + ", no damage found" + (key ? "" : " (structure only)")));
+  if (!damaged.length && !credProblems.length && !recoveryProblems.length) return log.ok(total + ", no damage found" + (key ? "" : " (structure only)"));
   process.exitCode = 1;
   const notes = (credProblems.length ? ", credentials.json damaged" : "") + (recoveryProblems.length ? ", recovery damaged (make a new one with 'recovery')" : "");
-  console.log(colors.yellow(total + ", " + damaged.length + " damaged" + notes));
-  console.log(colors.gray("Fix with 'get --id <id> --edit' / '--rm', or restore from db.json.bak / credentials.json.bak"));
+  log.warn(total + ", " + damaged.length + " damaged" + notes);
+  log.hint("Fix with 'get --id <id> --edit' / '--rm', or restore from db.json.bak / credentials.json.bak");
 }
 
 module.exports = checkDb;
