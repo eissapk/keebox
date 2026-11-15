@@ -1,6 +1,6 @@
 {
   "name": "keebox",
-  "version": "1.0.0",
+  "version": "0.9.0",
   "description": "KeeBox is an offline password manager that lives in your terminal",
   "main": "index.js",
   "scripts": {
