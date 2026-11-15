@@ -1,6 +1,6 @@
 {
   "name": "keebox",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "KeeBox is an offline password manager that lives in your terminal",
   "main": "index.js",
   "scripts": {
@@ -8,13 +8,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/eissapk/keybox.git"
+    "url": "git+https://github.com/eissapk/keebox.git"
   },
   "keywords": [],
   "author": "Eissa Saber",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/eissapk/keybox/issues"
+    "url": "https://github.com/eissapk/keebox/issues"
   },
-  "homepage": "https://github.com/eissapk/keybox#readme"
+  "homepage": "https://github.com/eissapk/keebox#readme"
 }
