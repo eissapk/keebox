@@ -1,92 +1,108 @@
-const { modulesPath, mkPass, prompt, exists, isAndroid } = require("./olum");
-const fs = require("fs");
-const path = require("path");
-const colors = require(modulesPath + "/colors");
-const commander = require(modulesPath + "/commander");
+const { mkPass, askPassword, loadData, copyOrPrint, run, FIELDS, SECRET_FIELDS, colors, hasMaster, unlock, createMaster, parseArgs } = require("./utils");
+const crypto = require("crypto");
 const pkgJSON = require("./package.json");
-const getEntry = require("./get");
-const addEntry = require("./add");
+const { getEntry, addEntry, exportEntries, importEntries, checkDb, createRecovery, recoverVault } = require("./options");
 
-// connect to db
-let db = null;
-let secrets = null;
-try {
-  db = JSON.parse(fs.readFileSync(path.resolve(__dirname, "./db.json")).toString());
-  secrets = JSON.parse(fs.readFileSync(path.resolve(__dirname, "./credentials.json")).toString()).secrets;
-} catch (err) {
-  return console.error(colors.red("Couldn't connect to db!"), "\n", err);
-}
+run(main);
 
-const cmd = new commander.Command();
+async function main() {
+  // connect to db
+  const data = loadData();
+  if (!data) return;
+  const { db, cred } = data;
 
-cmd.option("--id <id>", "Include account id - use it with 'get/add' commands");
-cmd.option("--name <name>", "Include account name - use it with 'get/add' commands");
-cmd.option("--location <location>", "Include account url - use it with 'get/add' commands");
-cmd.option("--username <username>", "Include account username - use it with 'get/add' commands");
-cmd.option("--login <login>", "Include account login - use it with 'get/add' commands");
-
-cmd.option("--copy", "Copy account password to clipboard - use it with 'get' command");
-cmd.option("--update", "Update account in db - use it with 'get' command");
-cmd.option("--delete", "Delete account in db - use it with 'get' command");
-
-cmd.option("--length <length>", "Password length - use it with 'make' command");
-
-cmd.command("add").description("Add account").action(add);
-cmd.command("get").description("display account(s)").action(get);
-cmd.command("make").description("Generate a password").action(make);
-
-cmd.version(pkgJSON.version).description("Password Manager CLI Tool (" + pkgJSON.version + ")");
-cmd.on("command:*", (operands) => {
-  console.error(colors.red(`error: unknown command '${operands[0]}'\n Try running --help`));
-  process.exitCode = 1;
-});
-
-cmd.parse(process.argv);
-
-function add() {
-  var obj = cmd.opts();
-  if (!obj.name) return console.error(colors.red("Missing --name argument!"));
-  if (!obj.location) return console.error(colors.red("Missing --location argument!"));
-  if (!obj.username) return console.error(colors.red("Missing --username argument!"));
-  if (!obj.login) obj.login = "";
-
-  prompt([{ type: "password", name: "password", message: "MASTER PASSWORD:" }], function (data) {
-    var pwdExists = exists(data.password, secrets);
-    if (!pwdExists) return console.error(colors.red("Wrong password!"));
-    addEntry(db, obj);
+  const parsed = parseArgs(process.argv.slice(2), {
+    version: pkgJSON.version,
+    description: "KeeBox CLI Tool (" + pkgJSON.version + ")",
+    options: [
+      ["--id <id>", "Include account id - use it with 'get/add' commands"],
+      ["--name <name>", "Include account name - use it with 'get/add' commands"],
+      ["--url <url>", "Include account url - use it with 'get/add' commands"],
+      ["--username <username>", "Include account username - use it with 'get/add' commands"],
+      ["--login <login>", "Include account login (encrypted) - use it with 'add' command"],
+      ["--notes <notes>", "Include account notes (encrypted) - use it with 'add' command"],
+      ["--cp", "Copy account password to clipboard - use it with 'get' command"],
+      ["--show", "Show account login/notes - use it with 'get' command"],
+      ["--edit", "Update account in db - use it with 'get' command"],
+      ["--rm", "Delete account in db - use it with 'get' command"],
+      ["--size <size>", "Password length - use it with 'make' command"],
+      ["--out <file>", "CSV file to write (default: keebox-export-<date>.csv) - use it with 'export' command"],
+      ["--file <file>", "CSV file to read (columns: name,password + optional url,username,login,notes,created,updated) - use it with 'import' command"],
+    ],
+    commands: { add: "Add account", get: "display account(s)", make: "Generate a password", export: "Export account(s) as decrypted CSV (filter with --id/--name/...)", import: "Import account(s) from a CSV file (e.g. one made by 'export')", check: "Damage check: find accounts that are broken or can't be decrypted (changes nothing)", recovery: "Create (or replace) the 12-word recovery phrase", recover: "Lost credentials.json / forgot the master password: unlock with the recovery phrase and set a new master password" },
   });
+  if (parsed) await { add, get, make, export: exportCsv, import: importCsv, check, recovery, recover }[parsed.command](parsed.opts, db, cred);
 }
 
-function get() {
-    var query = {};
-    var opts = cmd.opts();
-    if (opts.id) query.id = opts.id;
-    if (opts.name) query.name = opts.name;
-    if (opts.location) query.location = opts.location;
-    if (opts.username) query.username = opts.username;
-    if (opts.login) query.login = opts.login;
-
-  prompt([{ type: "password", name: "password", message: "MASTER PASSWORD:" }], function (data) {
-    var pwdExists = exists(data.password, secrets);
-    if (!pwdExists) return console.error(colors.red("Wrong password!"));
-    getEntry(db, query, opts);
-  });
-}
-
-function make() {
-  var obj = cmd.opts();
-  if (!obj.length) return console.error(colors.red("Missing --length argument!"));
-  var pass = mkPass(+obj.length);
-
-  if (isAndroid()) {
-      console.log(colors.green(pass));
-      return process.exit(1);
+// ask master password -> vault key, or null
+async function askMaster(cred, db) {
+  if (!hasMaster(cred)) {
+    // a new vault key would make the existing accounts unreadable
+    if (db.accounts.length || db.recovery) {
+      console.error(colors.red("credentials.json is missing or has no master password, but db.json has data."));
+      console.error(colors.yellow("Run 'recover' with your recovery phrase, or restore credentials.json.bak"));
+      return null;
+    }
+    console.log(colors.yellow("No MASTER PASSWORD yet, let's create one."));
+    const key = await createMaster(cred, crypto.randomBytes(32));
+    if (key) console.log(colors.gray("Tip: run 'recovery' to create a 12-word recovery phrase, in case credentials.json is lost"));
+    return key;
   }
+  const key = unlock((await askPassword("MASTER PASSWORD:")).trim(), cred);
+  if (!key) console.error(colors.red("Wrong password!"));
+  return key;
+}
 
-  const ncp = require(modulesPath + "/copy-paste");
-  ncp.copy(pass, () => {
-    console.log(colors.green("Copied to clipboard:"), pass);
-    process.exit(1);
+async function add(opts, db, cred) {
+  for (const f of ["name", "url", "username"]) if (!opts[f]) return console.error(colors.red("Missing --" + f + " argument!"));
+  const entry = {};
+  FIELDS.forEach((f) => (entry[f] = opts[f] || ""));
+
+  const key = await askMaster(cred, db);
+  if (key) await addEntry(db, entry, key);
+}
+
+async function get(opts, db, cred) {
+  for (const f of SECRET_FIELDS) if (opts[f]) return console.error(colors.red("Can't search by --" + f + ", it's encrypted (read it with --show)"));
+  const query = {};
+  ["id", ...FIELDS].forEach((f) => opts[f] && (query[f] = opts[f]));
+
+  const key = await askMaster(cred, db);
+  if (key) await getEntry(db, query, opts, key);
+}
+
+async function make(opts) {
+  if (!opts.size) return console.error(colors.red("Missing --size argument!"));
+  const length = Number(opts.size);
+  if (!Number.isInteger(length) || length < 4 || length > 1024) return console.error(colors.red("--size must be a number between 4 and 1024"));
+  await copyOrPrint(mkPass(length), "password", true);
+}
+
+async function exportCsv(opts, db, cred) {
+  for (const f of SECRET_FIELDS) if (opts[f]) return console.error(colors.red("Can't filter by --" + f + ", it's encrypted"));
+  const query = {};
+  ["id", ...FIELDS].forEach((f) => opts[f] && (query[f] = opts[f]));
+  const file = opts.out || "keebox-export-" + new Date().toISOString().slice(0, 10) + ".csv";
+  await exportEntries(db, query, file, () => askMaster(cred, db));
+}
+
+async function importCsv(opts, db, cred) {
+  if (!opts.file) return console.error(colors.red("Missing --file argument!"));
+  await importEntries(db, opts.file, () => askMaster(cred, db));
+}
+
+async function check(opts, db, cred) {
+  await checkDb(db, cred, async () => {
+    const key = unlock((await askPassword("MASTER PASSWORD:")).trim(), cred);
+    if (!key) console.error(colors.red("Wrong password!"));
+    return key;
   });
+}
 
+async function recovery(opts, db, cred) {
+  await createRecovery(db, () => askMaster(cred, db));
+}
+
+async function recover(opts, db, cred) {
+  await recoverVault(db, cred);
 }
