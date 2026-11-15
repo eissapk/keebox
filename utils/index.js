@@ -12,8 +12,19 @@ const prompt = require("./prompt");
 const drawTable = require("./table");
 const parseArgs = require("./cli");
 
-const dbPath = path.resolve(__dirname, "../db.json");
-const credPath = path.resolve(__dirname, "../credentials.json");
+// where db.json + credentials.json live:
+// - $KEEBOX_HOME when set
+// - ~/.keebox when installed with npm (inside node_modules, which npm wipes on update/uninstall)
+// - the project folder otherwise (git clone / portable USB copy)
+function dataDir() {
+  if (process.env.KEEBOX_HOME) return path.resolve(process.env.KEEBOX_HOME);
+  const appDir = path.resolve(__dirname, "..");
+  if (appDir.split(path.sep).includes("node_modules")) return path.join(require("os").homedir(), ".keebox");
+  return appDir;
+}
+const dir = dataDir();
+const dbPath = path.join(dir, "db.json");
+const credPath = path.join(dir, "credentials.json");
 
 // cryptographically secure, exact length, at least one char of each class (length >= 4)
 function mkPass(length) {
@@ -67,7 +78,8 @@ function decryptField(entry, field, key) {
 function saveJson(file, data) {
   const fs = require("fs");
   const tmp = file + ".tmp";
-  const fd = fs.openSync(tmp, "w");
+  fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+  const fd = fs.openSync(tmp, "w", 0o600);
   try {
     fs.writeFileSync(fd, JSON.stringify(data, null, 2));
     fs.fsyncSync(fd);

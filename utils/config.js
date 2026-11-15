@@ -1,14 +1,17 @@
 const { askPassword, loadData, saveOrReport, run, credPath, log, lockVault, hasMaster, unlock } = require("./index");
 const crypto = require("crypto");
 
-// usage: node utils/config.js   -> create the master password, or change it
+// usage: keebox master (or node utils/config.js)   -> create the master password, or change it
 if (require.main === module) run(main);
-module.exports = { createMaster };
+module.exports = { createMaster, changeMaster };
 
 async function main() {
   const data = loadData();
-  if (!data) return;
-  const { db, cred } = data;
+  if (data) await changeMaster(data.db, data.cred);
+}
+
+// create the master password, or change it (asks the current one first)
+async function changeMaster(db, cred) {
   if (!hasMaster(cred)) {
     // a new vault key would make the existing accounts unreadable
     if (db.accounts.length || db.recovery) return log.error("credentials.json is missing, but db.json has data. Run 'recover' with your recovery phrase, or restore credentials.json.bak");

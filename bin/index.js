@@ -1,7 +1,8 @@
-const { mkPass, askPassword, loadData, copyOrPrint, run, FIELDS, SECRET_FIELDS, log, hasMaster, unlock, createMaster, parseArgs } = require("./utils");
+#!/usr/bin/env node
+const { mkPass, askPassword, loadData, copyOrPrint, run, FIELDS, SECRET_FIELDS, log, hasMaster, unlock, createMaster, changeMaster, parseArgs } = require("../utils");
 const crypto = require("crypto");
-const pkgJSON = require("./package.json");
-const { getEntry, addEntry, exportEntries, importEntries, checkDb, createRecovery, recoverVault } = require("./options");
+const pkgJSON = require("../package.json");
+const { getEntry, addEntry, exportEntries, importEntries, checkDb, createRecovery, recoverVault } = require("../options");
 
 run(main);
 
@@ -29,9 +30,9 @@ async function main() {
       ["--out <file>", "CSV file to write (default: keebox-export-<date>.csv) - use it with 'export' command"],
       ["--file <file>", "CSV file to read (columns: name,password + optional url,username,login,notes,created,updated) - use it with 'import' command"],
     ],
-    commands: { add: "Add account", get: "display account(s)", make: "Generate a password", export: "Export account(s) as decrypted CSV (filter with --id/--name/...)", import: "Import account(s) from a CSV file (e.g. one made by 'export')", check: "Damage check: find accounts that are broken or can't be decrypted (changes nothing)", recovery: "Create (or replace) the 12-word recovery phrase", recover: "Lost credentials.json / forgot the master password: unlock with the recovery phrase and set a new master password" },
+    commands: { add: "Add account", get: "display account(s)", make: "Generate a password", export: "Export account(s) as decrypted CSV (filter with --id/--name/...)", import: "Import account(s) from a CSV file (e.g. one made by 'export')", check: "Damage check: find accounts that are broken or can't be decrypted (changes nothing)", recovery: "Create (or replace) the 12-word recovery phrase", recover: "Lost credentials.json / forgot the master password: unlock with the recovery phrase and set a new master password", master: "Create or change the master password (accounts and recovery phrase keep working)" },
   });
-  if (parsed) await { add, get, make, export: exportCsv, import: importCsv, check, recovery, recover }[parsed.command](parsed.opts, db, cred);
+  if (parsed) await { add, get, make, export: exportCsv, import: importCsv, check, recovery, recover, master }[parsed.command](parsed.opts, db, cred);
 }
 
 // ask master password -> vault key, or null
@@ -105,4 +106,8 @@ async function recovery(opts, db, cred) {
 
 async function recover(opts, db, cred) {
   await recoverVault(db, cred);
+}
+
+async function master(opts, db, cred) {
+  await changeMaster(db, cred);
 }

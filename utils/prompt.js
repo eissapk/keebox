@@ -1,12 +1,12 @@
 // minimal inquirer replacement, public Node APIs only
 // await prompt([{ type: "input" | "password" | "confirm", name, message, default }]) -> answers
 // - interactive (stdin is a terminal): readline for input/confirm, raw-mode reader for passwords (masked with "•")
-// - piped stdin: one shared line queue, so answers can be scripted: printf 'pw\ny\n' | node index.js get --id 1 --rm
+// - piped stdin: one shared line queue, so answers can be scripted: printf 'pw\ny\n' | keebox get --id 1 --rm
 // - Ctrl+C exits 130; Ctrl+D / end of input cancels with exit 1 (never auto-answers, e.g. "delete? (Y/n)")
 const readline = require("readline");
 const readlinePromises = require("readline/promises");
 
-// prompts go to the terminal even when stdout is redirected (node index.js get > list.txt)
+// prompts go to the terminal even when stdout is redirected (keebox get > list.txt)
 function promptOut() {
   return process.stdout.isTTY || !process.stderr.isTTY ? process.stdout : process.stderr;
 }
