@@ -332,3 +332,10 @@ Both are created automatically if missing, and every save keeps the previous ver
 ```
 npm test
 ```
+
+##### Build binaries
+
+```
+npm install -g @yao-pkg/pkg
+npm run build
+```

@@ -6,3 +6,4 @@ credentials.json
 *.bak
 *.tmp
 *.csv
+dist

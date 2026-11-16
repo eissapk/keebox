@@ -9,7 +9,8 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "build": "pkg . --targets node24-linux-x64,node24-macos-arm64,node24-win-x64 --out-path dist"
   },
   "repository": {
     "type": "git",
